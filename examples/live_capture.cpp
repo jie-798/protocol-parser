@@ -16,14 +16,17 @@
 
 // 我们的解析器头文件
 #include "parsers/base_parser.hpp"
-#include "parsers/ethernet_parser.hpp"
-#include "parsers/ipv4_parser.hpp"
-#include "parsers/ipv6_parser.hpp"
-#include "parsers/tcp_parser.hpp"
-#include "parsers/udp_parser.hpp"
-#include "parsers/sctp_parser.hpp"
-#include "parsers/icmp_parser.hpp"
-#include "parsers/icmpv6_parser.hpp"
+#include "parsers/datalink/ethernet_parser.hpp"
+#include "parsers/network/ipv4_parser.hpp"
+#include "parsers/network/ipv6_parser.hpp"
+#include "parsers/transport/tcp_parser.hpp"
+#include "parsers/transport/udp_parser.hpp"
+#include "parsers/transport/sctp_parser.hpp"
+#include "parsers/network/icmp_parser.hpp"
+#include "parsers/network/icmpv6_parser.hpp"
+#include "parsers/application/dns_parser.hpp"
+#include "parsers/application/http_parser.hpp"
+#include "parsers/application/https_parser.hpp"
 #include "core/buffer_view.hpp"
 
 using namespace protocol_parser::parsers;
@@ -45,6 +48,9 @@ struct PacketStats {
     size_t sctp_packets = 0;
     size_t icmp_packets = 0;
     size_t icmpv6_packets = 0;
+    size_t dns_packets = 0;
+    size_t http_packets = 0;
+    size_t https_packets = 0;
     size_t other_packets = 0;
     size_t parse_errors = 0;
     
@@ -88,6 +94,98 @@ void signal_handler(int signal) {
     if (g_pcap_handle) {
         pcap_breakloop(g_pcap_handle);
     }
+}
+
+// 解析应用层协议
+std::string parse_application_layer(const BufferView& buffer, uint16_t src_port, uint16_t dst_port, 
+                                   const std::string& src_ip, const std::string& dst_ip) {
+    std::stringstream info;
+    
+    // 添加调试信息
+    if (buffer.size() > 0) {
+        info << "\n  [DEBUG] Payload size: " << buffer.size() << " bytes, ports: " << src_port << " -> " << dst_port;
+        
+        // 显示前几个字节的内容
+        if (buffer.size() > 0) {
+            info << "\n  [DEBUG] First bytes: ";
+            for (size_t i = 0; i < std::min(buffer.size(), size_t(16)); ++i) {
+                info << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(buffer.data()[i]) << " ";
+            }
+            info << std::dec;
+        }
+    }
+    
+    try {
+        ParseContext context;
+        context.buffer = buffer;
+        
+        // DNS (端口53和5353 mDNS)
+        if (src_port == 53 || dst_port == 53 || src_port == 5353 || dst_port == 5353) {
+            info << "\n  [DEBUG] Trying DNS parser...";
+            DNSParser dns_parser;
+            if (dns_parser.can_parse(buffer)) {
+                info << "\n  [DEBUG] DNS can_parse returned true";
+                auto result = dns_parser.parse(context);
+                info << "\n  [DEBUG] DNS parse result: " << static_cast<int>(result);
+                if (result == ParseResult::Success) {
+                    g_stats.dns_packets++;
+                    info << "\n  Application: DNS";
+                    if (context.metadata.contains("dns_query_name")) {
+                        info << " (Query: " << std::any_cast<std::string>(context.metadata["dns_query_name"]) << ")";
+                    }
+                } else {
+                    info << "\n  [DEBUG] DNS parse failed, result: " << static_cast<int>(result);
+                }
+            } else {
+                info << "\n  [DEBUG] DNS can_parse returned false";
+            }
+        }
+        // HTTP (端口80)
+        else if (src_port == 80 || dst_port == 80) {
+            info << "\n  [DEBUG] Trying HTTP parser...";
+            HTTPParser http_parser;
+            if (http_parser.can_parse(buffer)) {
+                info << "\n  [DEBUG] HTTP can_parse returned true";
+                auto result = http_parser.parse(context);
+                info << "\n  [DEBUG] HTTP parse result: " << static_cast<int>(result);
+                if (result == ParseResult::Success) {
+                    g_stats.http_packets++;
+                    info << "\n  Application: HTTP";
+                    if (context.metadata.contains("http_method")) {
+                        info << " (" << std::any_cast<std::string>(context.metadata["http_method"]) << ")";
+                    }
+                } else {
+                    info << "\n  [DEBUG] HTTP parse failed, result: " << static_cast<int>(result);
+                }
+            } else {
+                info << "\n  [DEBUG] HTTP can_parse returned false";
+            }
+        }
+        // HTTPS (端口443)
+        else if (src_port == 443 || dst_port == 443) {
+            info << "\n  [DEBUG] Trying HTTPS parser...";
+            HTTPSParser https_parser;
+            if (https_parser.can_parse(buffer)) {
+                info << "\n  [DEBUG] HTTPS can_parse returned true";
+                auto result = https_parser.parse(context);
+                info << "\n  [DEBUG] HTTPS parse result: " << static_cast<int>(result);
+                if (result == ParseResult::Success) {
+                    g_stats.https_packets++;
+                    info << "\n  Application: HTTPS";
+                } else {
+                    info << "\n  [DEBUG] HTTPS parse failed, result: " << static_cast<int>(result);
+                }
+            } else {
+                info << "\n  [DEBUG] HTTPS can_parse returned false";
+            }
+        } else {
+            info << "\n  [DEBUG] No matching application layer protocol for ports " << src_port << " -> " << dst_port;
+        }
+    } catch (const std::exception& e) {
+        info << "\n  Application parse error: " << e.what();
+    }
+    
+    return info.str();
 }
 
 // 解析传输层协议
@@ -141,6 +239,15 @@ std::string parse_transport_layer(const BufferView& buffer, uint8_t protocol,
                              << "  Urgent Pointer: " << tcp_data.header.urgent_ptr << "\n"
                              << "  Connection: " << src_ip << ":" << tcp_data.header.src_port
                              << " -> " << dst_ip << ":" << tcp_data.header.dst_port;
+                        
+                        // 解析应用层协议
+                        if (tcp_data.payload.size() > 0) {
+                            std::string app_info = parse_application_layer(tcp_data.payload, 
+                                tcp_data.header.src_port, tcp_data.header.dst_port, src_ip, dst_ip);
+                            if (!app_info.empty()) {
+                                info << app_info;
+                            }
+                        }
                     }
                 }
                 break;
@@ -163,6 +270,15 @@ std::string parse_transport_layer(const BufferView& buffer, uint8_t protocol,
                              << "  Checksum: 0x" << std::hex << std::uppercase << udp_data.header.checksum << std::dec << "\n"
                              << "  Connection: " << src_ip << ":" << udp_data.header.src_port
                              << " -> " << dst_ip << ":" << udp_data.header.dst_port;
+                        
+                        // 解析应用层协议
+                        if (udp_data.payload.size() > 0) {
+                            std::string app_info = parse_application_layer(udp_data.payload, 
+                                udp_data.header.src_port, udp_data.header.dst_port, src_ip, dst_ip);
+                            if (!app_info.empty()) {
+                                info << app_info;
+                            }
+                        }
                     }
                 }
                 break;
@@ -445,6 +561,9 @@ void print_statistics() {
     std::cout << "SCTP: " << g_stats.sctp_packets << std::endl;
     std::cout << "ICMP: " << g_stats.icmp_packets << std::endl;
     std::cout << "ICMPv6: " << g_stats.icmpv6_packets << std::endl;
+    std::cout << "DNS: " << g_stats.dns_packets << std::endl;
+    std::cout << "HTTP: " << g_stats.http_packets << std::endl;
+    std::cout << "HTTPS: " << g_stats.https_packets << std::endl;
     std::cout << "其他: " << g_stats.other_packets << std::endl;
     std::cout << "解析错误: " << g_stats.parse_errors << std::endl;
     
