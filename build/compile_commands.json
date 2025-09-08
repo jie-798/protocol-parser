@@ -1,0 +1,122 @@
+[
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\core\\buffer_view.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\core\\buffer_view.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/core/buffer_view.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/core/buffer_view.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\base_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\base_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/base_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/base_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\datalink\\ethernet_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\datalink\\ethernet_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/datalink/ethernet_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\datalink\\arp_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\datalink\\arp_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/datalink/arp_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/arp_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\network\\ipv4_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\network\\ipv4_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/network/ipv4_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv4_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\network\\ipv6_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\network\\ipv6_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/network/ipv6_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\network\\icmp_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\network\\icmp_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/network/icmp_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmp_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\network\\icmpv6_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\network\\icmpv6_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/network/icmpv6_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmpv6_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\transport\\tcp_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\transport\\tcp_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/transport/tcp_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/transport/tcp_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\transport\\udp_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\transport\\udp_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/transport/udp_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/transport/udp_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\transport\\sctp_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\transport\\sctp_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/transport/sctp_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/transport/sctp_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\application\\dns_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\application\\dns_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/dns_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/application/dns_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\application\\http_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\application\\http_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/http_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/application/http_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\application\\https_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\application\\https_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/https_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\application\\ftp_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\application\\ftp_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/ftp_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\application\\ssh_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\application\\ssh_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/ssh_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/application/ssh_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\application\\telnet_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\application\\telnet_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/telnet_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\parsers\\application\\pop3_parser.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\parsers\\application\\pop3_parser.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/pop3_parser.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/parsers/application/pop3_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -flto -ffast-math -o CMakeFiles\\protocol_parser_core.dir\\utils\\network_utils.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\src\\utils\\network_utils.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/utils/network_utils.cpp",
+  "output": "src/CMakeFiles/protocol_parser_core.dir/utils/network_utils.cpp.obj"
+},
+{
+  "directory": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/examples",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/live_capture.dir/includes_CXX.rsp -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles\\live_capture.dir\\live_capture.cpp.obj -c C:\\Users\\huangxinjie\\Documents\\CppProjects\\protocol_praser\\examples\\live_capture.cpp",
+  "file": "C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/examples/live_capture.cpp",
+  "output": "examples/CMakeFiles/live_capture.dir/live_capture.cpp.obj"
+}
+]

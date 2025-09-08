@@ -10,6 +10,9 @@
 
 namespace protocol_parser::parsers {
 
+// 简化类型引用的using声明
+using BufferView = core::BufferView;
+
 /**
  * 解析结果枚举
  */
@@ -47,7 +50,7 @@ struct ProtocolInfo {
  * 解析上下文
  */
 struct ParseContext {
-    core::BufferView buffer;    // 数据缓冲区
+    BufferView buffer;    // 数据缓冲区
     size_t offset = 0;          // 当前偏移
     ParserState state = ParserState::Initial;
     std::unordered_map<std::string, std::any> metadata;  // 元数据
@@ -67,11 +70,11 @@ public:
     [[nodiscard]] virtual const ProtocolInfo& get_protocol_info() const noexcept = 0;
     
     /**
-     * 检查是否可以解析给定数据
+     * 检查是否可以解析给定的缓冲区
      * @param buffer 数据缓冲区
-     * @return true if can parse
+     * @return 如果可以解析返回true，否则返回false
      */
-    [[nodiscard]] virtual bool can_parse(const core::BufferView& buffer) const noexcept = 0;
+    [[nodiscard]] virtual bool can_parse(const BufferView& buffer) const noexcept = 0;
     
     /**
      * 解析数据包

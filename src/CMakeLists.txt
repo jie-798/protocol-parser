@@ -5,16 +5,32 @@ set(CORE_SOURCES
 
 # 解析器源文件
 set(PARSER_SOURCES
+    # 基础解析器
     parsers/base_parser.cpp
-    parsers/ethernet_parser.cpp
-    parsers/ipv4_parser.cpp
-    parsers/ipv6_parser.cpp
-    parsers/tcp_parser.cpp
-    parsers/udp_parser.cpp
-    parsers/sctp_parser.cpp
-    parsers/icmp_parser.cpp
-    parsers/icmpv6_parser.cpp
-    parsers/arp_parser.cpp
+    
+    # 数据链路层解析器
+    parsers/datalink/ethernet_parser.cpp
+    parsers/datalink/arp_parser.cpp
+    
+    # 网络层解析器
+    parsers/network/ipv4_parser.cpp
+    parsers/network/ipv6_parser.cpp
+    parsers/network/icmp_parser.cpp
+    parsers/network/icmpv6_parser.cpp
+    
+    # 传输层解析器
+    parsers/transport/tcp_parser.cpp
+    parsers/transport/udp_parser.cpp
+    parsers/transport/sctp_parser.cpp
+    
+    # 应用层解析器
+    parsers/application/dns_parser.cpp
+    parsers/application/http_parser.cpp
+    parsers/application/https_parser.cpp
+    parsers/application/ftp_parser.cpp
+    parsers/application/ssh_parser.cpp
+    parsers/application/telnet_parser.cpp
+    parsers/application/pop3_parser.cpp
 )
 
 # 工具源文件
