@@ -38,6 +38,7 @@ set(PARSER_SOURCES
 # 统计和监控源文件
 set(STATISTICS_SOURCES
     statistics/traffic_statistics.cpp
+    detection/protocol_detection.cpp
     # monitoring/performance_monitor.cpp
 )
 

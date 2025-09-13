@@ -4,12 +4,14 @@
 #include <chrono>
 #include <thread>
 #include <random>
+#include <iomanip>
 
 // 包含新增的解析器和统计功能
 #include "parsers/application/dhcp_parser.hpp"
 #include "parsers/application/snmp_parser.hpp"
 #include "statistics/traffic_statistics.hpp"
-#include "monitoring/performance_monitor.hpp"
+#include "detection/protocol_detection.hpp"
+// #include "monitoring/performance_monitor.hpp"
 
 using namespace ProtocolParser;
 using namespace std::chrono_literals;
@@ -115,6 +117,9 @@ void demonstrate_advanced_features() {
     // 创建统计系统
     Statistics::TrafficStatistics stats(100);
     
+    // 创建协议检测引擎
+    Detection::ProtocolDetectionEngine detector;
+    
     // 创建性能监控器
     // Monitoring::PerformanceMonitor monitor(1000);
     // monitor.start_monitoring();
@@ -138,6 +143,9 @@ void demonstrate_advanced_features() {
         auto result = dhcp_parser->parse(dhcp_buffer);
         auto parse_end = std::chrono::high_resolution_clock::now();
         
+        // 协议检测演示
+        auto detection_result = detector.detect_protocol_with_ports(dhcp_buffer, 68, 67);
+        
         if (result == Parsers::ParseResult::SUCCESS) {
             stats.record_packet("DHCP", dhcp_data.size());
             auto parse_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(parse_end - parse_start);
@@ -157,6 +165,9 @@ void demonstrate_advanced_features() {
         parse_start = std::chrono::high_resolution_clock::now();
         result = snmp_parser->parse(snmp_buffer);
         parse_end = std::chrono::high_resolution_clock::now();
+        
+        // SNMP协议检测演示
+        detection_result = detector.detect_protocol_with_ports(snmp_buffer, 161, 161);
         
         if (result == Parsers::ParseResult::SUCCESS) {
             stats.record_packet("SNMP", snmp_data.size());
@@ -249,6 +260,34 @@ void demonstrate_advanced_features() {
     std::cout << "  Community使用情况:\n";
     for (const auto& [community, count] : snmp_stats.community_usage) {
         std::cout << "    " << community << ": " << count << " 次\n";
+    }
+    
+    // 演示协议检测引擎
+    std::cout << "\n=== 协议检测引擎演示 ===\n";
+    
+    // 检测统计
+    auto detection_stats = detector.get_statistics();
+    std::cout << "检测统计:\n";
+    std::cout << "  总检测次数: " << detection_stats.total_detections << "\n";
+    std::cout << "  成功检测: " << detection_stats.successful_detections << "\n";
+    std::cout << "  基于端口检测: " << detection_stats.port_based_detections << "\n";
+    std::cout << "  基于签名检测: " << detection_stats.signature_based_detections << "\n";
+    std::cout << "  启发式检测: " << detection_stats.heuristic_detections << "\n";
+    std::cout << "  平均检测时间: " << detection_stats.avg_detection_time.count() << " ns\n";
+    
+    // 支持的协议列表
+    auto supported_protocols = detector.get_supported_protocols();
+    std::cout << "  支持的协议 (共" << supported_protocols.size() << "个): ";
+    for (size_t i = 0; i < supported_protocols.size(); ++i) {
+        std::cout << supported_protocols[i];
+        if (i < supported_protocols.size() - 1) std::cout << ", ";
+    }
+    std::cout << "\n";
+    
+    // 协议检测统计
+    std::cout << "  检测到的协议统计:\n";
+    for (const auto& [protocol, count] : detection_stats.protocol_detection_count) {
+        std::cout << "    " << protocol << ": " << count << " 次\n";
     }
     
     // monitor.stop_monitoring();
