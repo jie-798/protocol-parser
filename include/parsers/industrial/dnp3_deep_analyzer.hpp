@@ -8,8 +8,12 @@
 #include <array>
 #include <set>
 #include <mutex>
+#include <functional>
 
 namespace protocol_parser::parsers::industrial {
+
+// 前向声明
+struct DNP3Object;
 
 // DNP3数据链路层帧信息
 struct DNP3DataLinkInfo {
@@ -209,7 +213,7 @@ private:
     
     // 解析器状态
     std::unordered_map<uint16_t, std::vector<DNP3TransportInfo>> fragmented_messages_;
-    std::chrono::steady_clock::time_point last_packet_time_;
+    mutable std::chrono::steady_clock::time_point last_packet_time_;
     
     // 安全监控
     std::set<uint16_t> monitored_addresses_;
@@ -265,6 +269,7 @@ private:
     bool detect_timing_anomalies(const DNP3Info& info) const;
     bool detect_sequence_anomalies(const DNP3Info& info) const;
     bool detect_content_anomalies(const DNP3Info& info) const;
+    void analyze_anomalies(DNP3Info& info) const;
     
     // 统计更新
     void update_statistics(const DNP3Info& info);

@@ -1,4 +1,5 @@
 #include "parsers/industrial/dnp3_deep_analyzer.hpp"
+#include "parsers/industrial/dnp3_deep_analyzer.hpp"
 #include <algorithm>
 #include <cstring>
 #include <iomanip>
@@ -343,7 +344,8 @@ void DNP3DeepAnalyzer::analyze_anomalies(DNP3Info& info) const {
             anomalies.push_back("Packet interval too long");
         }
     }
-    last_packet_time_ = now;
+    // 使用const_cast更新mutable成员
+    const_cast<DNP3DeepAnalyzer*>(this)->last_packet_time_ = now;
     
     // 检测数据异常
     if (info.datalink_info.length > 250) {
@@ -475,17 +477,17 @@ bool DNP3DeepAnalyzer::detect_timing_attacks(const DNP3Info& info) const {
         }
     }
     
-    last_packet_time_ = now;
+    // 使用const_cast更新mutable成员
+    const_cast<DNP3DeepAnalyzer*>(this)->last_packet_time_ = now;
     return false;
 }
 
 bool DNP3DeepAnalyzer::detect_replay_attack(const DNP3Info& info) const {
     // 检测相同的应用层序列号
-    auto seq_key = std::make_pair(info.datalink_info.source, info.application_info.sequence);
+    uint32_t seq_key = (static_cast<uint32_t>(info.datalink_info.source) << 16) | info.application_info.sequence;
     
     auto now = std::chrono::steady_clock::now();
-    static std::unordered_map<std::pair<uint16_t, uint8_t>, std::chrono::steady_clock::time_point, 
-                              std::hash<std::pair<uint16_t, uint8_t>>> sequence_map;
+    static std::unordered_map<uint32_t, std::chrono::steady_clock::time_point> sequence_map;
     
     auto it = sequence_map.find(seq_key);
     if (it != sequence_map.end()) {
@@ -748,3 +750,23 @@ bool DNP3DeepAnalyzer::parse_dnp3_packet(const protocol_parser::core::BufferView
     
     return true;
 }
+
+// 添加缺少的方法实现
+bool DNP3DeepAnalyzer::detect_dos_attack(const DNP3Info& info) const {
+    // 简单的DoS检测逻辑
+    if (info.datalink_info.length > 200) {
+        return true; // 数据包过大可能是DoS攻击
+    }
+    return false;
+}
+
+bool DNP3DeepAnalyzer::detect_scan_attempt(const DNP3Info& info) const {
+    // 检测扫描行为
+    if (info.application_info.function_code == 0x01 && 
+        info.application_info.objects.empty()) {
+        return true; // 空的读取请求可能是扫描
+    }
+    return false;
+}
+
+} // namespace protocol_parser::parsers::industrial

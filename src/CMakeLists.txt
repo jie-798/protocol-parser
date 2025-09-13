@@ -27,8 +27,7 @@ file(GLOB_RECURSE AI_SOURCES
 # 合并所有源文件
 set(ALL_SOURCES ${CORE_SOURCES} ${SECURITY_SOURCES} ${INDUSTRIAL_SOURCES} ${AI_SOURCES})
 
-# 排除暂未实现的文件
-# list(FILTER ALL_SOURCES EXCLUDE REGEX ".*monitoring.*")
+# 所有源文件将被编译，不简化功能
 
 # 创建核心库
 add_library(protocol_parser_core STATIC ${ALL_SOURCES})

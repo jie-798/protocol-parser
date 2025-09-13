@@ -1,13 +1,25 @@
 #pragma once
 
 #include "parsers/base_parser.hpp"
+#include "core/buffer_view.hpp"
 #include <unordered_map>
 #include <vector>
 #include <optional>
 #include <array>
 #include <string_view>
 
+using namespace protocol_parser::parsers;
+using namespace protocol_parser::core;
+
 namespace ProtocolParser::Parsers::Application {
+
+// DHCP常量
+constexpr uint16_t DHCP_CLIENT_PORT = 68;
+constexpr uint16_t DHCP_SERVER_PORT = 67;
+constexpr uint16_t DHCP_BROADCAST_FLAG = 0x8000;
+constexpr size_t DHCP_MIN_SIZE = 236;
+constexpr size_t DHCP_HEADER_SIZE = 236;
+constexpr uint32_t DHCP_MAGIC_COOKIE = 0x63825363;
 
 // DHCP消息类型 (RFC 2131)
 enum class DHCPMessageType : uint8_t {
@@ -194,11 +206,14 @@ public:
     ~DHCPParser() override = default;
 
     // 基类接口实现
-    [[nodiscard]] ParseResult parse(const BufferView& buffer) noexcept override;
+    [[nodiscard]] ParseResult parse(ParseContext& context) noexcept override;
     [[nodiscard]] std::string get_protocol_name() const noexcept override;
     [[nodiscard]] uint16_t get_default_port() const noexcept override;
     [[nodiscard]] std::vector<uint16_t> get_supported_ports() const noexcept override;
     void reset() noexcept override;
+    
+    // DHCP特定的解析方法
+    [[nodiscard]] ParseResult parse(const BufferView& buffer) noexcept;
 
     // DHCP特定接口
     [[nodiscard]] const DHCPMessage& get_dhcp_message() const noexcept;

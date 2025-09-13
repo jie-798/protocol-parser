@@ -59,7 +59,7 @@ bool ProtocolSignature::SignaturePattern::search_matches(const uint8_t* data, si
 }
 
 // ProtocolSignature 实现
-double ProtocolSignature::calculate_match_score(const Core::BufferView& buffer) const noexcept {
+double ProtocolSignature::calculate_match_score(const protocol_parser::core::BufferView& buffer) const noexcept {
     const auto data = buffer.data();
     const auto size = buffer.size();
     
@@ -97,7 +97,7 @@ std::vector<DetectionResult> PortBasedDetector::detect_by_port(uint16_t src_port
                 DetectionResult result;
                 result.protocol_name = protocol;
                 result.confidence_score = confidence;
-                result.confidence = score_to_confidence_level(confidence);
+                result.confidence = ProtocolDetectionEngine::score_to_confidence_level(confidence);
                 result.detected_port = port;
                 result.detection_method = "Port-based";
                 result.evidence.push_back("Standard port " + std::to_string(port));
@@ -162,7 +162,7 @@ void PortBasedDetector::initialize_standard_ports() {
 }
 
 // HeuristicDetector 实现
-HeuristicDetector::PacketFeatures HeuristicDetector::extract_features(const Core::BufferView& buffer) const noexcept {
+HeuristicDetector::PacketFeatures HeuristicDetector::extract_features(const protocol_parser::core::BufferView& buffer) const noexcept {
     PacketFeatures features;
     const auto data = buffer.data();
     const auto size = buffer.size();
@@ -279,7 +279,7 @@ bool HeuristicDetector::is_likely_binary_protocol(const PacketFeatures& features
            features.consecutive_zeros > 8;
 }
 
-std::vector<std::string> HeuristicDetector::extract_strings(const Core::BufferView& buffer) const {
+std::vector<std::string> HeuristicDetector::extract_strings(const protocol_parser::core::BufferView& buffer) const {
     std::vector<std::string> strings;
     const auto data = buffer.data();
     const auto size = buffer.size();
@@ -315,7 +315,7 @@ ProtocolDetectionEngine::ProtocolDetectionEngine()
     initialize_builtin_signatures();
 }
 
-DetectionResult ProtocolDetectionEngine::detect_protocol(const Core::BufferView& buffer) const noexcept {
+DetectionResult ProtocolDetectionEngine::detect_protocol(const protocol_parser::core::BufferView& buffer) const noexcept {
     auto start_time = std::chrono::high_resolution_clock::now();
     
     std::vector<DetectionResult> all_results;
@@ -367,7 +367,7 @@ DetectionResult ProtocolDetectionEngine::detect_protocol(const Core::BufferView&
     return final_result;
 }
 
-DetectionResult ProtocolDetectionEngine::detect_protocol_with_ports(const Core::BufferView& buffer, 
+DetectionResult ProtocolDetectionEngine::detect_protocol_with_ports(const protocol_parser::core::BufferView& buffer, 
                                                                    uint16_t src_port, uint16_t dst_port) const noexcept {
     auto start_time = std::chrono::high_resolution_clock::now();
     
@@ -579,12 +579,12 @@ void DeepPacketInspector::remove_rule(const std::string& protocol_name) {
         rules_.end());
 }
 
-std::vector<DetectionResult> DeepPacketInspector::inspect_deep(const Core::BufferView& buffer) const noexcept {
+std::vector<DetectionResult> DeepPacketInspector::inspect_deep(const protocol_parser::core::BufferView& buffer) const noexcept {
     // 简化实现
     return {};
 }
 
-void DeepPacketInspector::update_flow_state(const std::string& flow_id, const Core::BufferView& buffer) {
+void DeepPacketInspector::update_flow_state(const std::string& flow_id, const protocol_parser::core::BufferView& buffer) {
     // 简化实现
 }
 
@@ -597,12 +597,12 @@ void DeepPacketInspector::initialize_standard_rules() {
     // 实现标准规则初始化
 }
 
-bool DeepPacketInspector::match_regex_patterns(const std::vector<std::regex>& patterns, const Core::BufferView& buffer) const noexcept {
+bool DeepPacketInspector::match_regex_patterns(const std::vector<std::regex>& patterns, const protocol_parser::core::BufferView& buffer) const noexcept {
     // 简化实现
     return false;
 }
 
-MLFeatureExtractor::MLFeatures MLFeatureExtractor::extract_features(const std::vector<Core::BufferView>& packet_sequence) const noexcept {
+MLFeatureExtractor::MLFeatures MLFeatureExtractor::extract_features(const std::vector<protocol_parser::core::BufferView>& packet_sequence) const noexcept {
     // 简化实现
     return MLFeatures{};
 }
@@ -612,15 +612,15 @@ std::vector<double> MLFeatureExtractor::to_feature_vector(const MLFeatures& feat
     return {};
 }
 
-double MLFeatureExtractor::calculate_compression_ratio(const Core::BufferView& buffer) const noexcept {
+double MLFeatureExtractor::calculate_compression_ratio(const protocol_parser::core::BufferView& buffer) const noexcept {
     return 1.0;
 }
 
-size_t MLFeatureExtractor::detect_length_fields(const Core::BufferView& buffer) const noexcept {
+size_t MLFeatureExtractor::detect_length_fields(const protocol_parser::core::BufferView& buffer) const noexcept {
     return 0;
 }
 
-size_t MLFeatureExtractor::detect_checksum_patterns(const Core::BufferView& buffer) const noexcept {
+size_t MLFeatureExtractor::detect_checksum_patterns(const protocol_parser::core::BufferView& buffer) const noexcept {
     return 0;
 }
 
@@ -665,7 +665,7 @@ std::vector<uint8_t> create_signature_pattern(const std::string& hex_string) {
     return pattern;
 }
 
-std::string buffer_to_hex_string(const Core::BufferView& buffer, size_t max_bytes) {
+std::string buffer_to_hex_string(const protocol_parser::core::BufferView& buffer, size_t max_bytes) {
     std::ostringstream oss;
     const auto data = buffer.data();
     const auto size = std::min(buffer.size(), max_bytes);

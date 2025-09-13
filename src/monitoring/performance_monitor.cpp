@@ -1,9 +1,11 @@
 #include "monitoring/performance_monitor.hpp"
+#include "monitoring/performance_monitor.hpp"
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
 #include <cmath>
 #include <chrono>
+#include <fstream>
 
 namespace ProtocolParser::Monitoring {
 
@@ -827,14 +829,6 @@ PerformanceMonitor::BenchmarkResult PerformanceMonitor::run_throughput_benchmark
     }
     
     return result;
-}
-
-void PerformanceMonitor::initialize_object_definitions() {
-    // 初始化对象定义映射 - 为扩展功能预留
-}
-
-void PerformanceMonitor::initialize_function_codes() {
-    // 初始化功能码映射 - 为扩展功能预留
 }
 
 } // namespace ProtocolParser::Monitoring

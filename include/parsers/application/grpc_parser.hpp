@@ -1,11 +1,14 @@
 #pragma once
 
-#include "core/base_parser.hpp"
-#include "core/buffer_view.hpp"
+#include "../base_parser.hpp"
+#include "../../core/buffer_view.hpp"
 #include <string>
 #include <vector>
 #include <unordered_map>
 #include <cstdint>
+
+using namespace protocol_parser::parsers;
+using namespace protocol_parser::core;
 
 namespace ProtocolParser::Parsers::Application {
 
@@ -171,7 +174,7 @@ struct GRPCMetrics {
  * - 现代C++23实现
  * - 高性能零拷贝设计
  */
-class GRPCParser : public Core::BaseParser {
+class GRPCParser : public BaseParser {
 public:
     /**
      * @brief 构造函数

@@ -115,6 +115,16 @@ bool DHCPMessage::is_broadcast() const noexcept {
 }
 
 // DHCPParser 方法实现
+// DHCP解析器的主解析方法
+ParseResult DHCPParser::parse(ParseContext& context) noexcept {
+    return parse(context.buffer);
+}
+
+// DHCP解析器的主解析方法
+ParseResult DHCPParser::parse(ParseContext& context) noexcept {
+    return parse(context.buffer);
+}
+
 ParseResult DHCPParser::parse(const BufferView& buffer) noexcept {
     reset();
     
@@ -124,45 +134,45 @@ ParseResult DHCPParser::parse(const BufferView& buffer) noexcept {
         
         if (size < DHCP_MIN_SIZE) {
             is_malformed_ = true;
-            return ParseResult::INSUFFICIENT_DATA;
+            return ParseResult::NeedMoreData;
         }
         
         // 解析头部
         if (!parse_header(data, size)) {
             is_malformed_ = true;
-            return ParseResult::INVALID_FORMAT;
+            return ParseResult::InvalidFormat;
         }
         
         // 检查魔数
         if (size >= DHCP_HEADER_SIZE + 4) {
             if (!is_valid_magic_cookie(data + DHCP_HEADER_SIZE)) {
                 is_malformed_ = true;
-                return ParseResult::INVALID_FORMAT;
+                return ParseResult::InvalidFormat;
             }
             
             // 解析选项
             if (!parse_options(data, size, DHCP_HEADER_SIZE + 4)) {
                 is_malformed_ = true;
-                return ParseResult::INVALID_FORMAT;
+                return ParseResult::InvalidFormat;
             }
         }
         
         // 验证消息
         if (!validate_message()) {
             is_malformed_ = true;
-            return ParseResult::INVALID_FORMAT;
+            return ParseResult::InvalidFormat;
         }
         
         parsed_successfully_ = true;
         update_statistics(dhcp_message_);
         perform_security_analysis();
         
-        return ParseResult::SUCCESS;
+        return ParseResult::Success;
         
     } catch (const std::exception&) {
         reset();
         is_malformed_ = true;
-        return ParseResult::PARSING_ERROR;
+        return ParseResult::InternalError;
     }
 }
 

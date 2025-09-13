@@ -68,7 +68,7 @@ public:
     ProtocolSignature() = default;
     explicit ProtocolSignature(std::string name) : protocol_name(std::move(name)) {}
     
-    [[nodiscard]] double calculate_match_score(const Core::BufferView& buffer) const noexcept;
+    [[nodiscard]] double calculate_match_score(const protocol_parser::core::BufferView& buffer) const noexcept;
 };
 
 // 端口基础的检测器
@@ -101,14 +101,14 @@ public:
         std::vector<std::string> detected_strings;  // 检测到的字符串
     };
     
-    [[nodiscard]] PacketFeatures extract_features(const Core::BufferView& buffer) const noexcept;
+    [[nodiscard]] PacketFeatures extract_features(const protocol_parser::core::BufferView& buffer) const noexcept;
     [[nodiscard]] std::vector<DetectionResult> detect_by_heuristics(const PacketFeatures& features) const noexcept;
     
 private:
     [[nodiscard]] double calculate_entropy(const uint8_t* data, size_t size) const noexcept;
     [[nodiscard]] bool is_likely_text_protocol(const PacketFeatures& features) const noexcept;
     [[nodiscard]] bool is_likely_binary_protocol(const PacketFeatures& features) const noexcept;
-    [[nodiscard]] std::vector<std::string> extract_strings(const Core::BufferView& buffer) const;
+    [[nodiscard]] std::vector<std::string> extract_strings(const protocol_parser::core::BufferView& buffer) const;
 };
 
 // 深度包检测器 - 状态机和复杂模式匹配
@@ -117,7 +117,7 @@ public:
     struct ProtocolRule {
         std::string protocol_name;
         std::vector<std::regex> regex_patterns;    // 正则表达式模式
-        std::function<bool(const Core::BufferView&)> custom_validator;  // 自定义验证函数
+        std::function<bool(const protocol_parser::core::BufferView&)> custom_validator;  // 自定义验证函数
         uint8_t min_packet_count{1};              // 最少需要的数据包数
         size_t state_window_size{5};              // 状态窗口大小
         double confidence_boost{0.3};             // 置信度加成
@@ -126,10 +126,10 @@ public:
     void add_rule(const ProtocolRule& rule);
     void remove_rule(const std::string& protocol_name);
     
-    [[nodiscard]] std::vector<DetectionResult> inspect_deep(const Core::BufferView& buffer) const noexcept;
+    [[nodiscard]] std::vector<DetectionResult> inspect_deep(const protocol_parser::core::BufferView& buffer) const noexcept;
     
     // 流状态跟踪
-    void update_flow_state(const std::string& flow_id, const Core::BufferView& buffer);
+    void update_flow_state(const std::string& flow_id, const protocol_parser::core::BufferView& buffer);
     [[nodiscard]] std::vector<DetectionResult> analyze_flow(const std::string& flow_id) const;
     
 private:
@@ -147,7 +147,7 @@ private:
     mutable std::mutex flow_mutex_;
     
     void initialize_standard_rules();
-    [[nodiscard]] bool match_regex_patterns(const std::vector<std::regex>& patterns, const Core::BufferView& buffer) const noexcept;
+    [[nodiscard]] bool match_regex_patterns(const std::vector<std::regex>& patterns, const protocol_parser::core::BufferView& buffer) const noexcept;
 };
 
 // 机器学习特征提取器 (为未来ML集成做准备)
@@ -174,15 +174,15 @@ public:
         size_t structured_data_indicators{0};
     };
     
-    [[nodiscard]] MLFeatures extract_features(const std::vector<Core::BufferView>& packet_sequence) const noexcept;
+    [[nodiscard]] MLFeatures extract_features(const std::vector<protocol_parser::core::BufferView>& packet_sequence) const noexcept;
     
     // 特征向量转换 (为ML算法准备)
     [[nodiscard]] std::vector<double> to_feature_vector(const MLFeatures& features) const noexcept;
     
 private:
-    [[nodiscard]] double calculate_compression_ratio(const Core::BufferView& buffer) const noexcept;
-    [[nodiscard]] size_t detect_length_fields(const Core::BufferView& buffer) const noexcept;
-    [[nodiscard]] size_t detect_checksum_patterns(const Core::BufferView& buffer) const noexcept;
+    [[nodiscard]] double calculate_compression_ratio(const protocol_parser::core::BufferView& buffer) const noexcept;
+    [[nodiscard]] size_t detect_length_fields(const protocol_parser::core::BufferView& buffer) const noexcept;
+    [[nodiscard]] size_t detect_checksum_patterns(const protocol_parser::core::BufferView& buffer) const noexcept;
 };
 
 // 主协议检测引擎
@@ -198,16 +198,16 @@ public:
     ProtocolDetectionEngine& operator=(ProtocolDetectionEngine&&) = default;
 
     // 主要检测接口
-    [[nodiscard]] DetectionResult detect_protocol(const Core::BufferView& buffer) const noexcept;
-    [[nodiscard]] DetectionResult detect_protocol_with_ports(const Core::BufferView& buffer, 
+    [[nodiscard]] DetectionResult detect_protocol(const protocol_parser::core::BufferView& buffer) const noexcept;
+    [[nodiscard]] DetectionResult detect_protocol_with_ports(const protocol_parser::core::BufferView& buffer, 
                                                            uint16_t src_port, uint16_t dst_port) const noexcept;
     
     // 批量检测
-    [[nodiscard]] std::vector<DetectionResult> detect_multiple(std::span<const Core::BufferView> buffers) const noexcept;
+    [[nodiscard]] std::vector<DetectionResult> detect_multiple(std::span<const protocol_parser::core::BufferView> buffers) const noexcept;
     
     // 流级别检测
     [[nodiscard]] DetectionResult detect_flow_protocol(const std::string& flow_id, 
-                                                      const std::vector<Core::BufferView>& packets,
+                                                      const std::vector<protocol_parser::core::BufferView>& packets,
                                                       uint16_t src_port, uint16_t dst_port) const;
     
     // 配置和管理
@@ -250,7 +250,7 @@ public:
     
     // 高级功能
     [[nodiscard]] std::vector<std::string> get_supported_protocols() const noexcept;
-    [[nodiscard]] std::vector<std::string> suggest_protocols(const Core::BufferView& buffer) const noexcept;
+    [[nodiscard]] std::vector<std::string> suggest_protocols(const protocol_parser::core::BufferView& buffer) const noexcept;
     
     // 调试和诊断
     struct DetectionTrace {
@@ -260,7 +260,7 @@ public:
         std::chrono::nanoseconds detection_duration{0};
     };
     
-    [[nodiscard]] std::pair<DetectionResult, DetectionTrace> detect_with_trace(const Core::BufferView& buffer) const;
+    [[nodiscard]] std::pair<DetectionResult, DetectionTrace> detect_with_trace(const protocol_parser::core::BufferView& buffer) const;
 
 private:
     // 检测器组件
@@ -297,7 +297,7 @@ namespace Utils {
     [[nodiscard]] bool is_likely_header_field(const uint8_t* data, size_t size) noexcept;
     [[nodiscard]] uint32_t calculate_simple_checksum(const uint8_t* data, size_t size) noexcept;
     [[nodiscard]] std::vector<uint8_t> create_signature_pattern(const std::string& hex_string);
-    [[nodiscard]] std::string buffer_to_hex_string(const Core::BufferView& buffer, size_t max_bytes = 32);
+    [[nodiscard]] std::string buffer_to_hex_string(const protocol_parser::core::BufferView& buffer, size_t max_bytes = 32);
 }
 
 } // namespace ProtocolParser::Detection

@@ -14,6 +14,7 @@
 #include <condition_variable>
 #include <concepts>
 #include <span>
+#include <cmath>
 
 namespace ProtocolParser::Monitoring {
 
