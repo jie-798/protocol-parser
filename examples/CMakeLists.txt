@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.15)
 # 示例程序列表
 set(EXAMPLES
     live_capture
+    advanced_features_demo
 )
 
 # npcap SDK路径

@@ -31,6 +31,14 @@ set(PARSER_SOURCES
     parsers/application/ssh_parser.cpp
     parsers/application/telnet_parser.cpp
     parsers/application/pop3_parser.cpp
+    parsers/application/dhcp_parser.cpp
+    parsers/application/snmp_parser.cpp
+)
+
+# 统计和监控源文件
+set(STATISTICS_SOURCES
+    statistics/traffic_statistics.cpp
+    # monitoring/performance_monitor.cpp
 )
 
 # 工具源文件
@@ -44,6 +52,7 @@ set(UTIL_SOURCES
 add_library(protocol_parser_core STATIC
     ${CORE_SOURCES}
     ${PARSER_SOURCES}
+    ${STATISTICS_SOURCES}
     ${UTIL_SOURCES}
 )
 
