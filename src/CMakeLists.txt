@@ -7,13 +7,30 @@ file(GLOB_RECURSE CORE_SOURCES
     "statistics/*.cpp"
     "detection/*.cpp"
     "utils/*.cpp"
+    "ai/*.cpp"
 )
 
+# 添加新增的高级组件
+file(GLOB_RECURSE SECURITY_SOURCES
+    "parsers/security/*.cpp"
+)
+
+file(GLOB_RECURSE INDUSTRIAL_SOURCES
+    "parsers/industrial/*.cpp"
+)
+
+file(GLOB_RECURSE AI_SOURCES
+    "ai/*.cpp"
+)
+
+# 合并所有源文件
+set(ALL_SOURCES ${CORE_SOURCES} ${SECURITY_SOURCES} ${INDUSTRIAL_SOURCES} ${AI_SOURCES})
+
 # 排除暂未实现的文件
-list(FILTER CORE_SOURCES EXCLUDE REGEX ".*monitoring.*")
+list(FILTER ALL_SOURCES EXCLUDE REGEX ".*monitoring.*")
 
 # 创建核心库
-add_library(protocol_parser_core STATIC ${CORE_SOURCES})
+add_library(protocol_parser_core STATIC ${ALL_SOURCES})
 
 # 设置目标属性
 target_include_directories(protocol_parser_core
