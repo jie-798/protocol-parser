@@ -157,10 +157,22 @@ public:
     ParseResult parse(ParseContext& context) noexcept override;
     
     /**
-     * @brief 获取解析器信息
-     * @return 解析器描述信息
+     * @brief 获取协议信息
+     * @return 协议信息结构
      */
-    std::string get_protocol_name() const noexcept override;
+    [[nodiscard]] const ProtocolInfo& get_protocol_info() const noexcept override;
+    
+    /**
+     * @brief 检查是否可以解析给定的缓冲区  
+     * @param buffer 数据缓冲区
+     * @return 如果可以解析返回true，否则返回false
+     */
+    [[nodiscard]] bool can_parse(const BufferView& buffer) const noexcept override;
+    
+    /**
+     * @brief 重置解析器状态
+     */
+    void reset() noexcept override;
     
     /**
      * @brief 检测是否为WebSocket握手

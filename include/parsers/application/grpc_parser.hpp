@@ -191,27 +191,39 @@ public:
      * @param context 解析上下文
      * @return 解析结果
      */
-    ParseResult parse(const ParseContext& context) override;
+    ParseResult parse(ParseContext& context) noexcept override;
     
     /**
-     * @brief 获取解析器信息
-     * @return 解析器描述信息
+     * @brief 获取协议信息
+     * @return 协议信息结构
      */
-    std::string get_info() const override;
+    [[nodiscard]] const ProtocolInfo& get_protocol_info() const noexcept override;
+    
+    /**
+     * @brief 检查是否可以解析给定的缓冲区  
+     * @param buffer 数据缓冲区
+     * @return 如果可以解析返回true，否则返回false
+     */
+    [[nodiscard]] bool can_parse(const BufferView& buffer) const noexcept override;
+    
+    /**
+     * @brief 重置解析器状态
+     */
+    void reset() noexcept override;
     
     /**
      * @brief 检测是否为gRPC流量
      * @param buffer 数据缓冲区
      * @return true if gRPC traffic
      */
-    bool is_grpc_traffic(const ProtocolParser::Core::BufferView& buffer) const;
+    bool is_grpc_traffic(const protocol_parser::core::BufferView& buffer) const;
     
     /**
      * @brief 检测是否为HTTP/2连接前导
      * @param buffer 数据缓冲区
      * @return true if HTTP/2 preface
      */
-    bool is_http2_preface(const ProtocolParser::Core::BufferView& buffer) const;
+    bool is_http2_preface(const protocol_parser::core::BufferView& buffer) const;
     
     /**
      * @brief 解析HTTP/2帧
@@ -219,7 +231,7 @@ public:
      * @param message gRPC消息输出
      * @return 解析结果
      */
-    ParseResult parse_http2_frame(const ProtocolParser::Core::BufferView& buffer, 
+    ParseResult parse_http2_frame(const protocol_parser::core::BufferView& buffer, 
                                  GRPCMessage& message) const;
     
     /**
@@ -228,7 +240,7 @@ public:
      * @param message gRPC消息输出
      * @return 解析结果
      */
-    ParseResult parse_grpc_message(const ProtocolParser::Core::BufferView& buffer, 
+    ParseResult parse_grpc_message(const protocol_parser::core::BufferView& buffer, 
                                   GRPCMessage& message) const;
     
     /**
@@ -237,7 +249,7 @@ public:
      * @param message gRPC消息输出
      * @return 解析结果
      */
-    ParseResult parse_headers_frame(const ProtocolParser::Core::BufferView& buffer, 
+    ParseResult parse_headers_frame(const protocol_parser::core::BufferView& buffer, 
                                    GRPCMessage& message) const;
     
     /**
@@ -246,7 +258,7 @@ public:
      * @param message gRPC消息输出
      * @return 解析结果
      */
-    ParseResult parse_data_frame(const ProtocolParser::Core::BufferView& buffer, 
+    ParseResult parse_data_frame(const protocol_parser::core::BufferView& buffer, 
                                 GRPCMessage& message) const;
     
     /**
@@ -255,7 +267,7 @@ public:
      * @param header 消息头部输出
      * @return 解析结果
      */
-    ParseResult parse_message_header(const ProtocolParser::Core::BufferView& buffer, 
+    ParseResult parse_message_header(const protocol_parser::core::BufferView& buffer, 
                                     GRPCMessageHeader& header) const;
     
     /**
@@ -325,7 +337,7 @@ private:
      * @param header 帧头部输出
      * @return 解析结果
      */
-    ParseResult parse_frame_header(const ProtocolParser::Core::BufferView& buffer, 
+    ParseResult parse_frame_header(const protocol_parser::core::BufferView& buffer, 
                                   HTTP2FrameHeader& header) const;
     
     /**

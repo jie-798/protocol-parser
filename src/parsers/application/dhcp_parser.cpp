@@ -120,11 +120,6 @@ ParseResult DHCPParser::parse(ParseContext& context) noexcept {
     return parse(context.buffer);
 }
 
-// DHCP解析器的主解析方法
-ParseResult DHCPParser::parse(ParseContext& context) noexcept {
-    return parse(context.buffer);
-}
-
 ParseResult DHCPParser::parse(const BufferView& buffer) noexcept {
     reset();
     
@@ -176,16 +171,28 @@ ParseResult DHCPParser::parse(const BufferView& buffer) noexcept {
     }
 }
 
-std::string DHCPParser::get_protocol_name() const noexcept {
-    return "DHCP";
+const ProtocolInfo& DHCPParser::get_protocol_info() const noexcept {
+    static const ProtocolInfo info{
+        "DHCP",         // name
+        0x0800,         // type (IP)
+        DHCP_HEADER_SIZE, // header_size
+        DHCP_MIN_SIZE,    // min_packet_size
+        1500              // max_packet_size
+    };
+    return info;
 }
 
-uint16_t DHCPParser::get_default_port() const noexcept {
-    return DHCP_SERVER_PORT;
-}
-
-std::vector<uint16_t> DHCPParser::get_supported_ports() const noexcept {
-    return {DHCP_CLIENT_PORT, DHCP_SERVER_PORT};
+bool DHCPParser::can_parse(const BufferView& buffer) const noexcept {
+    if (buffer.size() < DHCP_MIN_SIZE) {
+        return false;
+    }
+    
+    // 检查DHCP魔数
+    if (buffer.size() >= DHCP_HEADER_SIZE + 4) {
+        return is_valid_magic_cookie(buffer.data() + DHCP_HEADER_SIZE);
+    }
+    
+    return true; // 仅有头部时也可能是DHCP
 }
 
 void DHCPParser::reset() noexcept {

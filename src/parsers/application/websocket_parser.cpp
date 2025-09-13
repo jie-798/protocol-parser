@@ -53,21 +53,14 @@ namespace {
 namespace ProtocolParser::Parsers::Application {
 
 WebSocketParser::WebSocketParser() : BaseParser() {
-    // 初始化WebSocket签名模式
-    signatures_ = {
-        {0x81, 0xFF, "WebSocket Text Frame"},
-        {0x82, 0xFF, "WebSocket Binary Frame"},
-        {0x88, 0xFF, "WebSocket Close Frame"},
-        {0x89, 0xFF, "WebSocket Ping Frame"},
-        {0x8A, 0xFF, "WebSocket Pong Frame"}
-    };
+    // WebSocket解析器初始化
 }
 
-ParseResult WebSocketParser::parse(const ParseContext& context) {
+ParseResult WebSocketParser::parse(ParseContext& context) noexcept {
     const auto& buffer = context.buffer;
     
     if (buffer.size() < 2) {
-        return ParseResult::INSUFFICIENT_DATA;
+        return ParseResult::NeedMoreData;
     }
 
     try {
@@ -77,31 +70,46 @@ ParseResult WebSocketParser::parse(const ParseContext& context) {
         if (is_websocket_handshake(buffer)) {
             message.is_handshake = true;
             auto result = parse_handshake(buffer, message.handshake);
-            if (result == ParseResult::SUCCESS) {
+            if (result == ParseResult::Success) {
                 collect_statistics(message);
             }
             return result;
         } else if (is_websocket_frame(buffer)) {
             message.is_handshake = false;
             auto result = parse_frame(buffer, message.frame);
-            if (result == ParseResult::SUCCESS) {
+            if (result == ParseResult::Success) {
                 collect_statistics(message);
             }
             return result;
         }
         
-        return ParseResult::INVALID_FORMAT;
+        return ParseResult::InvalidFormat;
         
     } catch (const std::exception&) {
-        return ParseResult::PARSING_ERROR;
+        return ParseResult::InternalError;
     }
 }
 
-std::string WebSocketParser::get_info() const {
-    return "WebSocket Protocol Parser - RFC 6455 compliant with handshake and frame parsing";
+const ProtocolInfo& WebSocketParser::get_protocol_info() const noexcept {
+    static const ProtocolInfo info{
+        "WebSocket",    // name
+        0x0800,         // type (IP)
+        2,              // header_size (minimum frame header)
+        2,              // min_packet_size
+        MAX_FRAME_SIZE  // max_packet_size
+    };
+    return info;
 }
 
-bool WebSocketParser::is_websocket_handshake(const ProtocolParser::Core::BufferView& buffer) const {
+bool WebSocketParser::can_parse(const BufferView& buffer) const noexcept {
+    return is_websocket_handshake(buffer) || is_websocket_frame(buffer);
+}
+
+void WebSocketParser::reset() noexcept {
+    // 重置解析器状态
+}
+
+bool WebSocketParser::is_websocket_handshake(const protocol_parser::core::BufferView& buffer) const {
     if (buffer.size() < 16) {
         return false;
     }
@@ -117,7 +125,7 @@ bool WebSocketParser::is_websocket_handshake(const ProtocolParser::Core::BufferV
             data.find("connection: upgrade") != std::string::npos);
 }
 
-bool WebSocketParser::is_websocket_frame(const ProtocolParser::Core::BufferView& buffer) const {
+bool WebSocketParser::is_websocket_frame(const protocol_parser::core::BufferView& buffer) const {
     if (buffer.size() < 2) {
         return false;
     }
@@ -147,14 +155,14 @@ bool WebSocketParser::is_websocket_frame(const ProtocolParser::Core::BufferView&
     return true;
 }
 
-ParseResult WebSocketParser::parse_handshake(const ProtocolParser::Core::BufferView& buffer, 
+ParseResult WebSocketParser::parse_handshake(const protocol_parser::core::BufferView& buffer, 
                                             WebSocketHandshake& handshake) const {
     std::string data(reinterpret_cast<const char*>(buffer.data()), buffer.size());
     
     // 查找HTTP头部结束标记
     size_t header_end = data.find("\r\n\r\n");
     if (header_end == std::string::npos) {
-        return ParseResult::INSUFFICIENT_DATA;
+        return ParseResult::NeedMoreData;
     }
     
     std::istringstream stream(data.substr(0, header_end));
@@ -169,13 +177,13 @@ ParseResult WebSocketParser::parse_handshake(const ProtocolParser::Core::BufferV
         
         if (first_line) {
             auto result = parse_request_line(line, handshake);
-            if (result != ParseResult::SUCCESS) {
+            if (result != ParseResult::Success) {
                 return result;
             }
             first_line = false;
         } else if (!line.empty()) {
             auto result = parse_header_line(line, handshake);
-            if (result != ParseResult::SUCCESS) {
+            if (result != ParseResult::Success) {
                 return result;
             }
         }
@@ -183,29 +191,29 @@ ParseResult WebSocketParser::parse_handshake(const ProtocolParser::Core::BufferV
     
     // 验证握手
     if (!validate_handshake(handshake)) {
-        return ParseResult::INVALID_FORMAT;
+        return ParseResult::InvalidFormat;
     }
     
     handshake.is_valid = true;
-    return ParseResult::SUCCESS;
+    return ParseResult::Success;
 }
 
-ParseResult WebSocketParser::parse_frame(const ProtocolParser::Core::BufferView& buffer, 
+ParseResult WebSocketParser::parse_frame(const protocol_parser::core::BufferView& buffer, 
                                         WebSocketFrame& frame) const {
     if (buffer.size() < 2) {
-        return ParseResult::INSUFFICIENT_DATA;
+        return ParseResult::NeedMoreData;
     }
     
     // 解析帧头
     auto result = parse_frame_header(buffer, frame.header);
-    if (result != ParseResult::SUCCESS) {
+    if (result != ParseResult::Success) {
         return result;
     }
     
     // 检查数据是否足够
     size_t total_length = frame.header.header_length + frame.header.payload_length;
     if (buffer.size() < total_length) {
-        return ParseResult::INSUFFICIENT_DATA;
+        return ParseResult::NeedMoreData;
     }
     
     // 提取载荷数据
@@ -225,7 +233,7 @@ ParseResult WebSocketParser::parse_frame(const ProtocolParser::Core::BufferView&
     switch (frame.header.opcode) {
         case WebSocketOpcode::TEXT:
             if (!is_valid_utf8(frame.payload)) {
-                return ParseResult::INVALID_FORMAT;
+                return ParseResult::InvalidFormat;
             }
             frame.text_data = std::string(frame.payload.begin(), frame.payload.end());
             break;
@@ -237,7 +245,7 @@ ParseResult WebSocketParser::parse_frame(const ProtocolParser::Core::BufferView&
                 if (frame.payload.size() > 2) {
                     frame.close_reason = std::string(frame.payload.begin() + 2, frame.payload.end());
                     if (!is_valid_utf8(std::vector<uint8_t>(frame.payload.begin() + 2, frame.payload.end()))) {
-                        return ParseResult::INVALID_FORMAT;
+                        return ParseResult::InvalidFormat;
                     }
                 }
             }
@@ -249,11 +257,11 @@ ParseResult WebSocketParser::parse_frame(const ProtocolParser::Core::BufferView&
     
     // 验证帧
     if (!validate_frame(frame)) {
-        return ParseResult::INVALID_FORMAT;
+        return ParseResult::InvalidFormat;
     }
     
     frame.is_valid = true;
-    return ParseResult::SUCCESS;
+    return ParseResult::Success;
 }
 
 std::string WebSocketParser::calculate_accept_key(const std::string& key) const {
@@ -439,22 +447,22 @@ ParseResult WebSocketParser::parse_request_line(const std::string& line,
                                                WebSocketHandshake& handshake) const {
     std::istringstream stream(line);
     if (!(stream >> handshake.method >> handshake.uri >> handshake.version)) {
-        return ParseResult::INVALID_FORMAT;
+        return ParseResult::InvalidFormat;
     }
     
     // 检查是否为WebSocket握手请求
     if (handshake.method == "GET" || line.find("HTTP/1.1 101") == 0) {
-        return ParseResult::SUCCESS;
+        return ParseResult::Success;
     }
     
-    return ParseResult::INVALID_FORMAT;
+    return ParseResult::InvalidFormat;
 }
 
 ParseResult WebSocketParser::parse_header_line(const std::string& line, 
                                               WebSocketHandshake& handshake) const {
     size_t colon_pos = line.find(':');
     if (colon_pos == std::string::npos) {
-        return ParseResult::INVALID_FORMAT;
+        return ParseResult::InvalidFormat;
     }
     
     std::string key = line.substr(0, colon_pos);
@@ -498,13 +506,13 @@ ParseResult WebSocketParser::parse_header_line(const std::string& line,
         }
     }
     
-    return ParseResult::SUCCESS;
+    return ParseResult::Success;
 }
 
-ParseResult WebSocketParser::parse_frame_header(const ProtocolParser::Core::BufferView& buffer, 
+ParseResult WebSocketParser::parse_frame_header(const protocol_parser::core::BufferView& buffer, 
                                                WebSocketFrameHeader& header) const {
     if (buffer.size() < 2) {
-        return ParseResult::INSUFFICIENT_DATA;
+        return ParseResult::NeedMoreData;
     }
     
     size_t offset = 0;
@@ -525,24 +533,24 @@ ParseResult WebSocketParser::parse_frame_header(const ProtocolParser::Core::Buff
     // 解析载荷长度
     size_t length_bytes = parse_payload_length(buffer, offset, header.payload_length);
     if (length_bytes == 0) {
-        return ParseResult::INSUFFICIENT_DATA;
+        return ParseResult::NeedMoreData;
     }
     offset += length_bytes;
     
     // 如果有掩码，读取掩码键
     if (header.mask) {
         if (offset + 4 > buffer.size()) {
-            return ParseResult::INSUFFICIENT_DATA;
+            return ParseResult::NeedMoreData;
         }
         header.masking_key = *reinterpret_cast<const uint32_t*>(buffer.data() + offset);
         offset += 4;
     }
     
     header.header_length = offset;
-    return ParseResult::SUCCESS;
+    return ParseResult::Success;
 }
 
-size_t WebSocketParser::parse_payload_length(const ProtocolParser::Core::BufferView& buffer, 
+size_t WebSocketParser::parse_payload_length(const protocol_parser::core::BufferView& buffer, 
                                             size_t offset, uint64_t& length) const {
     if (offset >= buffer.size()) {
         return 0;

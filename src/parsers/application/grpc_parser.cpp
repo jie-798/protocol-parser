@@ -16,22 +16,14 @@
 namespace ProtocolParser::Parsers::Application {
 
 GRPCParser::GRPCParser() : BaseParser() {
-    // 初始化gRPC/HTTP2签名模式
-    signatures_ = {
-        {0x50, 0xFF, "HTTP/2 PRI"},
-        {0x00, 0xFF, "HTTP/2 DATA Frame"},
-        {0x01, 0xFF, "HTTP/2 HEADERS Frame"},
-        {0x04, 0xFF, "HTTP/2 SETTINGS Frame"},
-        {0x06, 0xFF, "HTTP/2 PING Frame"},
-        {0x08, 0xFF, "HTTP/2 WINDOW_UPDATE Frame"}
-    };
+    // gRPC解析器初始化
 }
 
-ParseResult GRPCParser::parse(const ParseContext& context) {
+ParseResult GRPCParser::parse(ParseContext& context) noexcept {
     const auto& buffer = context.buffer;
     
     if (buffer.size() < 9) { // HTTP/2最小帧大小
-        return ParseResult::INSUFFICIENT_DATA;
+        return ParseResult::NeedMoreData;
     }
 
     try {
@@ -39,32 +31,48 @@ ParseResult GRPCParser::parse(const ParseContext& context) {
         
         // 检测HTTP/2连接前导
         if (is_http2_preface(buffer)) {
-            return ParseResult::SUCCESS; // 连接前导解析成功
+            return ParseResult::Success; // 连接前导解析成功
         }
         
         // 检测是否为gRPC流量
         if (!is_grpc_traffic(buffer)) {
-            return ParseResult::INVALID_FORMAT;
+            return ParseResult::InvalidFormat;
         }
         
         // 解析HTTP/2帧
         auto result = parse_http2_frame(buffer, message);
-        if (result == ParseResult::SUCCESS) {
+        if (result == ParseResult::Success) {
             collect_metrics(message);
         }
         
         return result;
         
     } catch (const std::exception&) {
-        return ParseResult::PARSING_ERROR;
+        return ParseResult::InternalError;
     }
 }
 
-std::string GRPCParser::get_info() const {
-    return "gRPC Protocol Parser - HTTP/2 based RPC framework with Protocol Buffers support";
+const ProtocolInfo& GRPCParser::get_protocol_info() const noexcept {
+    static const ProtocolInfo info{
+        "gRPC",         // name
+        0x0800,         // type (IP)
+        9,              // header_size (HTTP/2 frame header)
+        9,              // min_packet_size
+        MAX_FRAME_SIZE  // max_packet_size
+    };
+    return info;
 }
 
-bool GRPCParser::is_grpc_traffic(const ProtocolParser::Core::BufferView& buffer) const {
+bool GRPCParser::can_parse(const BufferView& buffer) const noexcept {
+    return is_grpc_traffic(buffer) || is_http2_preface(buffer);
+}
+
+void GRPCParser::reset() noexcept {
+    // 重置解析器状态
+    metrics_ = GRPCMetrics{};
+}
+
+bool GRPCParser::is_grpc_traffic(const protocol_parser::core::BufferView& buffer) const {
     if (buffer.size() < 9) {
         return false;
     }
@@ -96,7 +104,7 @@ bool GRPCParser::is_grpc_traffic(const ProtocolParser::Core::BufferView& buffer)
     return true;
 }
 
-bool GRPCParser::is_http2_preface(const ProtocolParser::Core::BufferView& buffer) const {
+bool GRPCParser::is_http2_preface(const protocol_parser::core::BufferView& buffer) const {
     const size_t preface_len = strlen(HTTP2_PREFACE);
     if (buffer.size() < preface_len) {
         return false;
@@ -105,24 +113,24 @@ bool GRPCParser::is_http2_preface(const ProtocolParser::Core::BufferView& buffer
     return memcmp(buffer.data(), HTTP2_PREFACE, preface_len) == 0;
 }
 
-ParseResult GRPCParser::parse_http2_frame(const ProtocolParser::Core::BufferView& buffer, 
+ParseResult GRPCParser::parse_http2_frame(const protocol_parser::core::BufferView& buffer, 
                                          GRPCMessage& message) const {
     // 解析帧头部
     auto result = parse_frame_header(buffer, message.frame_header);
-    if (result != ParseResult::SUCCESS) {
+    if (result != ParseResult::Success) {
         return result;
     }
     
     // 检查数据是否足够
     size_t total_length = 9 + message.frame_header.length;
     if (buffer.size() < total_length) {
-        return ParseResult::INSUFFICIENT_DATA;
+        return ParseResult::NeedMoreData;
     }
     
     message.total_length = total_length;
     
     // 根据帧类型进行解析
-    ProtocolParser::Core::BufferView frame_payload(
+    protocol_parser::core::BufferView frame_payload(
         buffer.data() + 9, 
         message.frame_header.length
     );
@@ -139,27 +147,27 @@ ParseResult GRPCParser::parse_http2_frame(const ProtocolParser::Core::BufferView
         case HTTP2FrameType::GOAWAY:
             // 控制帧，解析成功但不需要进一步处理gRPC消息
             message.is_valid = true;
-            return ParseResult::SUCCESS;
+            return ParseResult::Success;
         default:
-            return ParseResult::SUCCESS; // 其他帧类型暂时跳过
+            return ParseResult::Success; // 其他帧类型暂时跳过
     }
 }
 
-ParseResult GRPCParser::parse_grpc_message(const ProtocolParser::Core::BufferView& buffer, 
+ParseResult GRPCParser::parse_grpc_message(const protocol_parser::core::BufferView& buffer, 
                                           GRPCMessage& message) const {
     if (buffer.size() < 5) { // gRPC消息头最小长度
-        return ParseResult::INSUFFICIENT_DATA;
+        return ParseResult::NeedMoreData;
     }
     
     // 解析gRPC消息头部
     auto result = parse_message_header(buffer, message.message_header);
-    if (result != ParseResult::SUCCESS) {
+    if (result != ParseResult::Success) {
         return result;
     }
     
     // 检查载荷数据是否足够
     if (buffer.size() < 5 + message.message_header.length) {
-        return ParseResult::INSUFFICIENT_DATA;
+        return ParseResult::NeedMoreData;
     }
     
     // 提取载荷数据
@@ -173,13 +181,13 @@ ParseResult GRPCParser::parse_grpc_message(const ProtocolParser::Core::BufferVie
         }
     }
     
-    return ParseResult::SUCCESS;
+    return ParseResult::Success;
 }
 
-ParseResult GRPCParser::parse_headers_frame(const ProtocolParser::Core::BufferView& buffer, 
+ParseResult GRPCParser::parse_headers_frame(const protocol_parser::core::BufferView& buffer, 
                                            GRPCMessage& message) const {
     if (buffer.empty()) {
-        return ParseResult::SUCCESS;
+        return ParseResult::Success;
     }
     
     size_t offset = 0;
@@ -187,7 +195,7 @@ ParseResult GRPCParser::parse_headers_frame(const ProtocolParser::Core::BufferVi
     // 如果有优先级信息，跳过5字节
     if (message.frame_header.flags & 0x20) { // PRIORITY flag
         if (buffer.size() < 5) {
-            return ParseResult::INSUFFICIENT_DATA;
+            return ParseResult::NeedMoreData;
         }
         offset = 5;
     }
@@ -195,11 +203,11 @@ ParseResult GRPCParser::parse_headers_frame(const ProtocolParser::Core::BufferVi
     // 如果有填充，读取填充长度
     if (message.frame_header.flags & 0x08) { // PADDED flag
         if (offset >= buffer.size()) {
-            return ParseResult::INSUFFICIENT_DATA;
+            return ParseResult::NeedMoreData;
         }
         uint8_t pad_length = buffer[offset++];
         if (offset + pad_length > buffer.size()) {
-            return ParseResult::INSUFFICIENT_DATA;
+            return ParseResult::NeedMoreData;
         }
     }
     
@@ -211,7 +219,7 @@ ParseResult GRPCParser::parse_headers_frame(const ProtocolParser::Core::BufferVi
     
     // 简化的HPACK解码
     auto result = simple_hpack_decode(header_block, message.call_info.request_headers);
-    if (result != ParseResult::SUCCESS) {
+    if (result != ParseResult::Success) {
         return result;
     }
     
@@ -235,13 +243,13 @@ ParseResult GRPCParser::parse_headers_frame(const ProtocolParser::Core::BufferVi
     message.is_end_stream = (message.frame_header.flags & 0x01) != 0;
     message.is_end_headers = (message.frame_header.flags & 0x04) != 0;
     
-    return ParseResult::SUCCESS;
+    return ParseResult::Success;
 }
 
-ParseResult GRPCParser::parse_data_frame(const ProtocolParser::Core::BufferView& buffer, 
+ParseResult GRPCParser::parse_data_frame(const protocol_parser::core::BufferView& buffer, 
                                         GRPCMessage& message) const {
     if (buffer.empty()) {
-        return ParseResult::SUCCESS;
+        return ParseResult::Success;
     }
     
     size_t offset = 0;
@@ -249,22 +257,22 @@ ParseResult GRPCParser::parse_data_frame(const ProtocolParser::Core::BufferView&
     // 如果有填充，读取填充长度
     if (message.frame_header.flags & 0x08) { // PADDED flag
         if (buffer.size() < 1) {
-            return ParseResult::INSUFFICIENT_DATA;
+            return ParseResult::NeedMoreData;
         }
         uint8_t pad_length = buffer[offset++];
         if (offset + pad_length > buffer.size()) {
-            return ParseResult::INSUFFICIENT_DATA;
+            return ParseResult::NeedMoreData;
         }
     }
     
     // 提取数据载荷
     size_t data_length = buffer.size() - offset;
     if (data_length > 0) {
-        ProtocolParser::Core::BufferView data_buffer(buffer.data() + offset, data_length);
+        protocol_parser::core::BufferView data_buffer(buffer.data() + offset, data_length);
         
         // 尝试解析gRPC消息
         auto result = parse_grpc_message(data_buffer, message);
-        if (result == ParseResult::SUCCESS && message.is_valid) {
+        if (result == ParseResult::Success && message.is_valid) {
             message.type = (message.frame_header.stream_id % 2 == 1) ? 
                           GRPCMessageType::REQUEST : GRPCMessageType::RESPONSE;
         }
@@ -273,13 +281,13 @@ ParseResult GRPCParser::parse_data_frame(const ProtocolParser::Core::BufferView&
     // 设置流结束标志
     message.is_end_stream = (message.frame_header.flags & 0x01) != 0;
     
-    return ParseResult::SUCCESS;
+    return ParseResult::Success;
 }
 
-ParseResult GRPCParser::parse_message_header(const ProtocolParser::Core::BufferView& buffer, 
+ParseResult GRPCParser::parse_message_header(const protocol_parser::core::BufferView& buffer, 
                                             GRPCMessageHeader& header) const {
     if (buffer.size() < 5) {
-        return ParseResult::INSUFFICIENT_DATA;
+        return ParseResult::NeedMoreData;
     }
     
     // 第一个字节包含压缩标志
@@ -296,7 +304,7 @@ ParseResult GRPCParser::parse_message_header(const ProtocolParser::Core::BufferV
         header.compression = detect_compression(sample);
     }
     
-    return ParseResult::SUCCESS;
+    return ParseResult::Success;
 }
 
 GRPCCompression GRPCParser::detect_compression(const std::vector<uint8_t>& data) const {
@@ -464,10 +472,10 @@ std::string GRPCParser::compression_to_string(GRPCCompression compression) const
     }
 }
 
-ParseResult GRPCParser::parse_frame_header(const ProtocolParser::Core::BufferView& buffer, 
+ParseResult GRPCParser::parse_frame_header(const protocol_parser::core::BufferView& buffer, 
                                           HTTP2FrameHeader& header) const {
     if (buffer.size() < 9) {
-        return ParseResult::INSUFFICIENT_DATA;
+        return ParseResult::NeedMoreData;
     }
     
     // 解析帧长度（24位）
@@ -482,7 +490,7 @@ ParseResult GRPCParser::parse_frame_header(const ProtocolParser::Core::BufferVie
     // 解析流ID（31位）
     header.stream_id = ntohl(*reinterpret_cast<const uint32_t*>(buffer.data() + 5)) & 0x7FFFFFFF;
     
-    return ParseResult::SUCCESS;
+    return ParseResult::Success;
 }
 
 ParseResult GRPCParser::simple_hpack_decode(const std::vector<uint8_t>& data, 
@@ -549,7 +557,7 @@ ParseResult GRPCParser::simple_hpack_decode(const std::vector<uint8_t>& data,
         }
     }
     
-    return ParseResult::SUCCESS;
+    return ParseResult::Success;
 }
 
 void GRPCParser::parse_pseudo_header(const std::string& name, 

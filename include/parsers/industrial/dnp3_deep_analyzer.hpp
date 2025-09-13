@@ -261,6 +261,9 @@ private:
     bool detect_broadcast_abuse(const DNP3Info& info) const;
     bool detect_timing_attacks(const DNP3Info& info) const;
     bool detect_replay_attack(const DNP3Info& info) const;
+    bool detect_dos_attack(const DNP3Info& info) const;
+    bool detect_scan_attempt(const DNP3Info& info) const;
+    bool detect_attack_patterns(const DNP3Info& info) const;
     bool analyze_authentication(const DNP3Info& info) const;
     
     // 异常检测方法
@@ -278,6 +281,7 @@ private:
     // 实用工具方法
     std::string get_function_name(uint8_t function_code, bool is_application = false) const;
     std::string get_object_description(uint8_t group, uint8_t variation) const;
+    size_t get_object_data_size(uint8_t group, uint8_t variation) const;
     uint32_t calculate_security_score(const DNP3SecurityAnalysis& analysis) const;
     std::string determine_risk_level(uint32_t security_score) const;
     

@@ -207,9 +207,8 @@ public:
 
     // 基类接口实现
     [[nodiscard]] ParseResult parse(ParseContext& context) noexcept override;
-    [[nodiscard]] std::string get_protocol_name() const noexcept override;
-    [[nodiscard]] uint16_t get_default_port() const noexcept override;
-    [[nodiscard]] std::vector<uint16_t> get_supported_ports() const noexcept override;
+    [[nodiscard]] const ProtocolInfo& get_protocol_info() const noexcept override;
+    [[nodiscard]] bool can_parse(const BufferView& buffer) const noexcept override;
     void reset() noexcept override;
     
     // DHCP特定的解析方法

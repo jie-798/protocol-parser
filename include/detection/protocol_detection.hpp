@@ -114,6 +114,8 @@ private:
 // 深度包检测器 - 状态机和复杂模式匹配
 class DeepPacketInspector {
 public:
+    explicit DeepPacketInspector();
+    
     struct ProtocolRule {
         std::string protocol_name;
         std::vector<std::regex> regex_patterns;    // 正则表达式模式
@@ -283,12 +285,13 @@ private:
     [[nodiscard]] double calculate_combined_confidence(const std::vector<DetectionResult>& results) const noexcept;
     [[nodiscard]] std::string select_best_protocol(const std::vector<DetectionResult>& results) const noexcept;
     
-    void update_statistics(const DetectionResult& result, std::chrono::nanoseconds detection_time) const noexcept;
-    void initialize_builtin_signatures();
-    
     // 工具方法
     [[nodiscard]] static ConfidenceLevel score_to_confidence_level(double score) noexcept;
     [[nodiscard]] static std::string confidence_level_to_string(ConfidenceLevel level) noexcept;
+    
+private:
+    void update_statistics(const DetectionResult& result, std::chrono::nanoseconds detection_time) const noexcept;
+    void initialize_builtin_signatures();
 };
 
 // 工具函数
