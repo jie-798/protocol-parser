@@ -1,9 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/cmake_install.cmake",
-		"C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src/cmake_install.cmake",
-		"C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/examples/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
