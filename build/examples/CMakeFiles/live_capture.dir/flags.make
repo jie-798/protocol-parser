@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = @CMakeFiles/live_capture.dir/includes_CXX.rsp
 
-CXX_FLAGS = -g -std=c++23 -Wall -Wextra -Wpedantic -O3 -march=native
+CXX_FLAGS =  -Wall -Wextra -Wpedantic -O3 -DNDEBUG -march=native -std=c++23 -Wall -Wextra -O3
 

@@ -11,6 +11,9 @@
 #include <functional>
 #include <array>
 #include <regex>
+#include <chrono>
+#include <mutex>
+#include <shared_mutex>
 
 namespace ProtocolParser::Detection {
 
@@ -62,6 +65,7 @@ public:
     std::vector<uint16_t> typical_ports;
     double base_confidence{0.7};
     
+    ProtocolSignature() = default;
     explicit ProtocolSignature(std::string name) : protocol_name(std::move(name)) {}
     
     [[nodiscard]] double calculate_match_score(const Core::BufferView& buffer) const noexcept;

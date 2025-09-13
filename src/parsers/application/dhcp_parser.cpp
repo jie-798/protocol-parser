@@ -1,9 +1,17 @@
 #include "parsers/application/dhcp_parser.hpp"
 #include <cstring>
-#include <arpa/inet.h>
 #include <algorithm>
 #include <iomanip>
 #include <sstream>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#endif
 
 namespace ProtocolParser::Parsers::Application {
 

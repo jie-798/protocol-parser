@@ -198,6 +198,54 @@ core/buffer_view.cpp.s:
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/core/buffer_view.cpp.s
 .PHONY : core/buffer_view.cpp.s
 
+detection/protocol_detection.obj: detection/protocol_detection.cpp.obj
+.PHONY : detection/protocol_detection.obj
+
+# target to build an object file
+detection/protocol_detection.cpp.obj:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/detection/protocol_detection.cpp.obj
+.PHONY : detection/protocol_detection.cpp.obj
+
+detection/protocol_detection.i: detection/protocol_detection.cpp.i
+.PHONY : detection/protocol_detection.i
+
+# target to preprocess a source file
+detection/protocol_detection.cpp.i:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/detection/protocol_detection.cpp.i
+.PHONY : detection/protocol_detection.cpp.i
+
+detection/protocol_detection.s: detection/protocol_detection.cpp.s
+.PHONY : detection/protocol_detection.s
+
+# target to generate assembly for a file
+detection/protocol_detection.cpp.s:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/detection/protocol_detection.cpp.s
+.PHONY : detection/protocol_detection.cpp.s
+
+parsers/application/dhcp_parser.obj: parsers/application/dhcp_parser.cpp.obj
+.PHONY : parsers/application/dhcp_parser.obj
+
+# target to build an object file
+parsers/application/dhcp_parser.cpp.obj:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/dhcp_parser.cpp.obj
+.PHONY : parsers/application/dhcp_parser.cpp.obj
+
+parsers/application/dhcp_parser.i: parsers/application/dhcp_parser.cpp.i
+.PHONY : parsers/application/dhcp_parser.i
+
+# target to preprocess a source file
+parsers/application/dhcp_parser.cpp.i:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/dhcp_parser.cpp.i
+.PHONY : parsers/application/dhcp_parser.cpp.i
+
+parsers/application/dhcp_parser.s: parsers/application/dhcp_parser.cpp.s
+.PHONY : parsers/application/dhcp_parser.s
+
+# target to generate assembly for a file
+parsers/application/dhcp_parser.cpp.s:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/dhcp_parser.cpp.s
+.PHONY : parsers/application/dhcp_parser.cpp.s
+
 parsers/application/dns_parser.obj: parsers/application/dns_parser.cpp.obj
 .PHONY : parsers/application/dns_parser.obj
 
@@ -317,6 +365,30 @@ parsers/application/pop3_parser.s: parsers/application/pop3_parser.cpp.s
 parsers/application/pop3_parser.cpp.s:
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/pop3_parser.cpp.s
 .PHONY : parsers/application/pop3_parser.cpp.s
+
+parsers/application/snmp_parser.obj: parsers/application/snmp_parser.cpp.obj
+.PHONY : parsers/application/snmp_parser.obj
+
+# target to build an object file
+parsers/application/snmp_parser.cpp.obj:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/snmp_parser.cpp.obj
+.PHONY : parsers/application/snmp_parser.cpp.obj
+
+parsers/application/snmp_parser.i: parsers/application/snmp_parser.cpp.i
+.PHONY : parsers/application/snmp_parser.i
+
+# target to preprocess a source file
+parsers/application/snmp_parser.cpp.i:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/snmp_parser.cpp.i
+.PHONY : parsers/application/snmp_parser.cpp.i
+
+parsers/application/snmp_parser.s: parsers/application/snmp_parser.cpp.s
+.PHONY : parsers/application/snmp_parser.s
+
+# target to generate assembly for a file
+parsers/application/snmp_parser.cpp.s:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/snmp_parser.cpp.s
+.PHONY : parsers/application/snmp_parser.cpp.s
 
 parsers/application/ssh_parser.obj: parsers/application/ssh_parser.cpp.obj
 .PHONY : parsers/application/ssh_parser.obj
@@ -606,6 +678,30 @@ parsers/transport/udp_parser.cpp.s:
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/transport/udp_parser.cpp.s
 .PHONY : parsers/transport/udp_parser.cpp.s
 
+statistics/traffic_statistics.obj: statistics/traffic_statistics.cpp.obj
+.PHONY : statistics/traffic_statistics.obj
+
+# target to build an object file
+statistics/traffic_statistics.cpp.obj:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/statistics/traffic_statistics.cpp.obj
+.PHONY : statistics/traffic_statistics.cpp.obj
+
+statistics/traffic_statistics.i: statistics/traffic_statistics.cpp.i
+.PHONY : statistics/traffic_statistics.i
+
+# target to preprocess a source file
+statistics/traffic_statistics.cpp.i:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/statistics/traffic_statistics.cpp.i
+.PHONY : statistics/traffic_statistics.cpp.i
+
+statistics/traffic_statistics.s: statistics/traffic_statistics.cpp.s
+.PHONY : statistics/traffic_statistics.s
+
+# target to generate assembly for a file
+statistics/traffic_statistics.cpp.s:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/statistics/traffic_statistics.cpp.s
+.PHONY : statistics/traffic_statistics.cpp.s
+
 utils/network_utils.obj: utils/network_utils.cpp.obj
 .PHONY : utils/network_utils.obj
 
@@ -646,6 +742,12 @@ help:
 	@echo ... core/buffer_view.obj
 	@echo ... core/buffer_view.i
 	@echo ... core/buffer_view.s
+	@echo ... detection/protocol_detection.obj
+	@echo ... detection/protocol_detection.i
+	@echo ... detection/protocol_detection.s
+	@echo ... parsers/application/dhcp_parser.obj
+	@echo ... parsers/application/dhcp_parser.i
+	@echo ... parsers/application/dhcp_parser.s
 	@echo ... parsers/application/dns_parser.obj
 	@echo ... parsers/application/dns_parser.i
 	@echo ... parsers/application/dns_parser.s
@@ -661,6 +763,9 @@ help:
 	@echo ... parsers/application/pop3_parser.obj
 	@echo ... parsers/application/pop3_parser.i
 	@echo ... parsers/application/pop3_parser.s
+	@echo ... parsers/application/snmp_parser.obj
+	@echo ... parsers/application/snmp_parser.i
+	@echo ... parsers/application/snmp_parser.s
 	@echo ... parsers/application/ssh_parser.obj
 	@echo ... parsers/application/ssh_parser.i
 	@echo ... parsers/application/ssh_parser.s
@@ -697,6 +802,9 @@ help:
 	@echo ... parsers/transport/udp_parser.obj
 	@echo ... parsers/transport/udp_parser.i
 	@echo ... parsers/transport/udp_parser.s
+	@echo ... statistics/traffic_statistics.obj
+	@echo ... statistics/traffic_statistics.i
+	@echo ... statistics/traffic_statistics.s
 	@echo ... utils/network_utils.obj
 	@echo ... utils/network_utils.i
 	@echo ... utils/network_utils.s

@@ -174,6 +174,44 @@ live_capture/fast:
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f examples\CMakeFiles\live_capture.dir\build.make examples/CMakeFiles/live_capture.dir/build
 .PHONY : live_capture/fast
 
+# Convenience name for target.
+examples/CMakeFiles/advanced_features_demo.dir/rule:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 examples/CMakeFiles/advanced_features_demo.dir/rule
+.PHONY : examples/CMakeFiles/advanced_features_demo.dir/rule
+
+# Convenience name for target.
+advanced_features_demo: examples/CMakeFiles/advanced_features_demo.dir/rule
+.PHONY : advanced_features_demo
+
+# fast build rule for target.
+advanced_features_demo/fast:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f examples\CMakeFiles\advanced_features_demo.dir\build.make examples/CMakeFiles/advanced_features_demo.dir/build
+.PHONY : advanced_features_demo/fast
+
+advanced_features_demo.obj: advanced_features_demo.cpp.obj
+.PHONY : advanced_features_demo.obj
+
+# target to build an object file
+advanced_features_demo.cpp.obj:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f examples\CMakeFiles\advanced_features_demo.dir\build.make examples/CMakeFiles/advanced_features_demo.dir/advanced_features_demo.cpp.obj
+.PHONY : advanced_features_demo.cpp.obj
+
+advanced_features_demo.i: advanced_features_demo.cpp.i
+.PHONY : advanced_features_demo.i
+
+# target to preprocess a source file
+advanced_features_demo.cpp.i:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f examples\CMakeFiles\advanced_features_demo.dir\build.make examples/CMakeFiles/advanced_features_demo.dir/advanced_features_demo.cpp.i
+.PHONY : advanced_features_demo.cpp.i
+
+advanced_features_demo.s: advanced_features_demo.cpp.s
+.PHONY : advanced_features_demo.s
+
+# target to generate assembly for a file
+advanced_features_demo.cpp.s:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f examples\CMakeFiles\advanced_features_demo.dir\build.make examples/CMakeFiles/advanced_features_demo.dir/advanced_features_demo.cpp.s
+.PHONY : advanced_features_demo.cpp.s
+
 live_capture.obj: live_capture.cpp.obj
 .PHONY : live_capture.obj
 
@@ -210,7 +248,11 @@ help:
 	@echo ... install/strip
 	@echo ... list_install_components
 	@echo ... rebuild_cache
+	@echo ... advanced_features_demo
 	@echo ... live_capture
+	@echo ... advanced_features_demo.obj
+	@echo ... advanced_features_demo.i
+	@echo ... advanced_features_demo.s
 	@echo ... live_capture.obj
 	@echo ... live_capture.i
 	@echo ... live_capture.s

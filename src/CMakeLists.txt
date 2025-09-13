@@ -1,61 +1,19 @@
-# 核心库源文件
-set(CORE_SOURCES
-    core/buffer_view.cpp
+# 协议解析器核心库构建配置
+
+# 收集所有源文件
+file(GLOB_RECURSE CORE_SOURCES
+    "core/*.cpp"
+    "parsers/*.cpp"
+    "statistics/*.cpp"
+    "detection/*.cpp"
+    "utils/*.cpp"
 )
 
-# 解析器源文件
-set(PARSER_SOURCES
-    # 基础解析器
-    parsers/base_parser.cpp
-    
-    # 数据链路层解析器
-    parsers/datalink/ethernet_parser.cpp
-    parsers/datalink/arp_parser.cpp
-    
-    # 网络层解析器
-    parsers/network/ipv4_parser.cpp
-    parsers/network/ipv6_parser.cpp
-    parsers/network/icmp_parser.cpp
-    parsers/network/icmpv6_parser.cpp
-    
-    # 传输层解析器
-    parsers/transport/tcp_parser.cpp
-    parsers/transport/udp_parser.cpp
-    parsers/transport/sctp_parser.cpp
-    
-    # 应用层解析器
-    parsers/application/dns_parser.cpp
-    parsers/application/http_parser.cpp
-    parsers/application/https_parser.cpp
-    parsers/application/ftp_parser.cpp
-    parsers/application/ssh_parser.cpp
-    parsers/application/telnet_parser.cpp
-    parsers/application/pop3_parser.cpp
-    parsers/application/dhcp_parser.cpp
-    parsers/application/snmp_parser.cpp
-)
-
-# 统计和监控源文件
-set(STATISTICS_SOURCES
-    statistics/traffic_statistics.cpp
-    detection/protocol_detection.cpp
-    # monitoring/performance_monitor.cpp
-)
-
-# 工具源文件
-set(UTIL_SOURCES
-    utils/network_utils.cpp
-    # utils/simd_utils.cpp
-    # utils/checksum.cpp
-)
+# 排除暂未实现的文件
+list(FILTER CORE_SOURCES EXCLUDE REGEX ".*monitoring.*")
 
 # 创建核心库
-add_library(protocol_parser_core STATIC
-    ${CORE_SOURCES}
-    ${PARSER_SOURCES}
-    ${STATISTICS_SOURCES}
-    ${UTIL_SOURCES}
-)
+add_library(protocol_parser_core STATIC ${CORE_SOURCES})
 
 # 设置目标属性
 target_include_directories(protocol_parser_core
@@ -63,6 +21,9 @@ target_include_directories(protocol_parser_core
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
+
+# 设置C++标准
+target_compile_features(protocol_parser_core PUBLIC cxx_std_23)
 
 # 链接依赖
 target_link_libraries(protocol_parser_core
@@ -73,19 +34,31 @@ target_link_libraries(protocol_parser_core
 # 编译器特定优化
 if(MSVC)
     target_compile_options(protocol_parser_core PRIVATE
-        /O2 /Oi /Ot /Oy /GL
+        /O2 /Oi /Ot /Oy /GL /fp:fast
     )
     target_link_options(protocol_parser_core PRIVATE
         /LTCG
     )
 else()
     target_compile_options(protocol_parser_core PRIVATE
-        -O3 -flto -ffast-math
+        -O3 -flto -ffast-math -funroll-loops
     )
     target_link_options(protocol_parser_core PRIVATE
         -flto
     )
 endif()
+
+# Windows特定设置
+if(WIN32)
+    target_link_libraries(protocol_parser_core PRIVATE ws2_32)
+endif()
+
+# 设置编译定义
+target_compile_definitions(protocol_parser_core PRIVATE
+    PROTOCOL_PARSER_BUILDING
+    $<$<CONFIG:Debug>:PROTOCOL_PARSER_DEBUG>
+    $<$<CONFIG:Release>:PROTOCOL_PARSER_RELEASE>
+)
 
 # 安装规则
 install(TARGETS protocol_parser_core

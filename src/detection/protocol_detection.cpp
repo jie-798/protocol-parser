@@ -5,6 +5,8 @@
 #include <chrono>
 #include <sstream>
 #include <iomanip>
+#include <mutex>
+#include <shared_mutex>
 
 namespace ProtocolParser::Detection {
 
@@ -564,7 +566,29 @@ DeepPacketInspector::DeepPacketInspector() {
     initialize_standard_rules();
 }
 
+void DeepPacketInspector::add_rule(const ProtocolRule& rule) {
+    rules_.push_back(rule);
+}
+
+void DeepPacketInspector::remove_rule(const std::string& protocol_name) {
+    rules_.erase(
+        std::remove_if(rules_.begin(), rules_.end(),
+            [&protocol_name](const ProtocolRule& rule) {
+                return rule.protocol_name == protocol_name;
+            }),
+        rules_.end());
+}
+
 std::vector<DetectionResult> DeepPacketInspector::inspect_deep(const Core::BufferView& buffer) const noexcept {
+    // 简化实现
+    return {};
+}
+
+void DeepPacketInspector::update_flow_state(const std::string& flow_id, const Core::BufferView& buffer) {
+    // 简化实现
+}
+
+std::vector<DetectionResult> DeepPacketInspector::analyze_flow(const std::string& flow_id) const {
     // 简化实现
     return {};
 }
@@ -573,9 +597,31 @@ void DeepPacketInspector::initialize_standard_rules() {
     // 实现标准规则初始化
 }
 
+bool DeepPacketInspector::match_regex_patterns(const std::vector<std::regex>& patterns, const Core::BufferView& buffer) const noexcept {
+    // 简化实现
+    return false;
+}
+
 MLFeatureExtractor::MLFeatures MLFeatureExtractor::extract_features(const std::vector<Core::BufferView>& packet_sequence) const noexcept {
     // 简化实现
     return MLFeatures{};
+}
+
+std::vector<double> MLFeatureExtractor::to_feature_vector(const MLFeatures& features) const noexcept {
+    // 简化实现
+    return {};
+}
+
+double MLFeatureExtractor::calculate_compression_ratio(const Core::BufferView& buffer) const noexcept {
+    return 1.0;
+}
+
+size_t MLFeatureExtractor::detect_length_fields(const Core::BufferView& buffer) const noexcept {
+    return 0;
+}
+
+size_t MLFeatureExtractor::detect_checksum_patterns(const Core::BufferView& buffer) const noexcept {
+    return 0;
 }
 
 // Utils 命名空间实现

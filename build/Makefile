@@ -186,6 +186,19 @@ live_capture/fast:
 	$(MAKE) $(MAKESILENT) -f examples\CMakeFiles\live_capture.dir\build.make examples/CMakeFiles/live_capture.dir/build
 .PHONY : live_capture/fast
 
+#=============================================================================
+# Target rules for targets named advanced_features_demo
+
+# Build rule for target.
+advanced_features_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 advanced_features_demo
+.PHONY : advanced_features_demo
+
+# fast build rule for target.
+advanced_features_demo/fast:
+	$(MAKE) $(MAKESILENT) -f examples\CMakeFiles\advanced_features_demo.dir\build.make examples/CMakeFiles/advanced_features_demo.dir/build
+.PHONY : advanced_features_demo/fast
+
 # Help Target
 help:
 	@echo The following are some of the valid targets for this Makefile:
@@ -198,6 +211,7 @@ help:
 	@echo ... install/strip
 	@echo ... list_install_components
 	@echo ... rebuild_cache
+	@echo ... advanced_features_demo
 	@echo ... live_capture
 	@echo ... protocol_parser_core
 .PHONY : help

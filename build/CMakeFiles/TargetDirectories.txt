@@ -12,6 +12,7 @@ C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src/CMakeFiles/
 C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src/CMakeFiles/install/local.dir
 C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/src/CMakeFiles/install/strip.dir
 C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/examples/CMakeFiles/live_capture.dir
+C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/examples/CMakeFiles/advanced_features_demo.dir
 C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/examples/CMakeFiles/edit_cache.dir
 C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/examples/CMakeFiles/rebuild_cache.dir
 C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/build/examples/CMakeFiles/list_install_components.dir
