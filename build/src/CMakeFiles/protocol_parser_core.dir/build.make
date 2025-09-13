@@ -71,11 +71,26 @@ include src/CMakeFiles/protocol_parser_core.dir/flags.make
 src/CMakeFiles/protocol_parser_core.dir/codegen:
 .PHONY : src/CMakeFiles/protocol_parser_core.dir/codegen
 
+src/CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/flags.make
+src/CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
+src/CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/ai/protocol_detector.cpp
+src/CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.obj"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\ai\protocol_detector.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\ai\protocol_detector.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\ai\protocol_detector.cpp
+
+src/CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.i"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\ai\protocol_detector.cpp > CMakeFiles\protocol_parser_core.dir\ai\protocol_detector.cpp.i
+
+src/CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.s"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\ai\protocol_detector.cpp -o CMakeFiles\protocol_parser_core.dir\ai\protocol_detector.cpp.s
+
 src/CMakeFiles/protocol_parser_core.dir/core/buffer_view.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/flags.make
 src/CMakeFiles/protocol_parser_core.dir/core/buffer_view.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/core/buffer_view.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/core/buffer_view.cpp
 src/CMakeFiles/protocol_parser_core.dir/core/buffer_view.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/core/buffer_view.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/core/buffer_view.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/core/buffer_view.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\core\buffer_view.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\core\buffer_view.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\core\buffer_view.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/core/buffer_view.cpp.i: cmake_force
@@ -90,7 +105,7 @@ src/CMakeFiles/protocol_parser_core.dir/detection/protocol_detection.cpp.obj: sr
 src/CMakeFiles/protocol_parser_core.dir/detection/protocol_detection.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/detection/protocol_detection.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/detection/protocol_detection.cpp
 src/CMakeFiles/protocol_parser_core.dir/detection/protocol_detection.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/detection/protocol_detection.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/detection/protocol_detection.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/detection/protocol_detection.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\detection\protocol_detection.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\detection\protocol_detection.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\detection\protocol_detection.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/detection/protocol_detection.cpp.i: cmake_force
@@ -105,7 +120,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/application/dhcp_parser.cpp.obj:
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/dhcp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/dhcp_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/dhcp_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/dhcp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/dhcp_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/dhcp_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/application/dhcp_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\application\dhcp_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\application\dhcp_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\dhcp_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/dhcp_parser.cpp.i: cmake_force
@@ -120,7 +135,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/application/dns_parser.cpp.obj: 
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/dns_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/dns_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/dns_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/dns_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/dns_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/dns_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/application/dns_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\application\dns_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\application\dns_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\dns_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/dns_parser.cpp.i: cmake_force
@@ -135,7 +150,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.obj: 
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/ftp_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\application\ftp_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\application\ftp_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\ftp_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.i: cmake_force
@@ -146,11 +161,26 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.s: cm
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.s"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\ftp_parser.cpp -o CMakeFiles\protocol_parser_core.dir\parsers\application\ftp_parser.cpp.s
 
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/flags.make
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/grpc_parser.cpp
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.obj"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\application\grpc_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\application\grpc_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\grpc_parser.cpp
+
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.i"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\grpc_parser.cpp > CMakeFiles\protocol_parser_core.dir\parsers\application\grpc_parser.cpp.i
+
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.s"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\grpc_parser.cpp -o CMakeFiles\protocol_parser_core.dir\parsers\application\grpc_parser.cpp.s
+
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/http_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/flags.make
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/http_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/http_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/http_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/http_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/http_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/http_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/application/http_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\application\http_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\application\http_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\http_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/http_parser.cpp.i: cmake_force
@@ -165,7 +195,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.obj
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/https_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\application\https_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\application\https_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\https_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.i: cmake_force
@@ -176,11 +206,26 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.s: 
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.s"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\https_parser.cpp -o CMakeFiles\protocol_parser_core.dir\parsers\application\https_parser.cpp.s
 
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/flags.make
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/mqtt_parser.cpp
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.obj"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\application\mqtt_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\application\mqtt_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\mqtt_parser.cpp
+
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.i"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\mqtt_parser.cpp > CMakeFiles\protocol_parser_core.dir\parsers\application\mqtt_parser.cpp.i
+
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.s"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\mqtt_parser.cpp -o CMakeFiles\protocol_parser_core.dir\parsers\application\mqtt_parser.cpp.s
+
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/pop3_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/flags.make
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/pop3_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/pop3_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/pop3_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/pop3_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/pop3_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/pop3_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/application/pop3_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\application\pop3_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\application\pop3_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\pop3_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/pop3_parser.cpp.i: cmake_force
@@ -195,7 +240,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/application/snmp_parser.cpp.obj:
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/snmp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/snmp_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/snmp_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/snmp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/snmp_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/snmp_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/application/snmp_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\application\snmp_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\application\snmp_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\snmp_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/snmp_parser.cpp.i: cmake_force
@@ -210,7 +255,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/application/ssh_parser.cpp.obj: 
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/ssh_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/ssh_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/ssh_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/ssh_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/ssh_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/ssh_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/application/ssh_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\application\ssh_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\application\ssh_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\ssh_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/ssh_parser.cpp.i: cmake_force
@@ -225,7 +270,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.ob
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/telnet_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\application\telnet_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\application\telnet_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\telnet_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.i: cmake_force
@@ -236,11 +281,26 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.s:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.s"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\telnet_parser.cpp -o CMakeFiles\protocol_parser_core.dir\parsers\application\telnet_parser.cpp.s
 
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/flags.make
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/application/websocket_parser.cpp
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.obj"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\application\websocket_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\application\websocket_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\websocket_parser.cpp
+
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.i"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\websocket_parser.cpp > CMakeFiles\protocol_parser_core.dir\parsers\application\websocket_parser.cpp.i
+
+src/CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.s"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\application\websocket_parser.cpp -o CMakeFiles\protocol_parser_core.dir\parsers\application\websocket_parser.cpp.s
+
 src/CMakeFiles/protocol_parser_core.dir/parsers/base_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/flags.make
 src/CMakeFiles/protocol_parser_core.dir/parsers/base_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/base_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/base_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/base_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/base_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/base_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/base_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\base_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\base_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\base_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/base_parser.cpp.i: cmake_force
@@ -255,7 +315,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/arp_parser.cpp.obj: src
 src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/arp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/arp_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/datalink/arp_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/arp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/arp_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/arp_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/arp_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\datalink\arp_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\datalink\arp_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\datalink\arp_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/arp_parser.cpp.i: cmake_force
@@ -270,7 +330,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.obj
 src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/datalink/ethernet_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\datalink\ethernet_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\datalink\ethernet_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\datalink\ethernet_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.i: cmake_force
@@ -281,11 +341,26 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.s: 
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.s"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\datalink\ethernet_parser.cpp -o CMakeFiles\protocol_parser_core.dir\parsers\datalink\ethernet_parser.cpp.s
 
+src/CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/flags.make
+src/CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
+src/CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/industrial/modbus_deep_analyzer.cpp
+src/CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.obj"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\industrial\modbus_deep_analyzer.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\industrial\modbus_deep_analyzer.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\industrial\modbus_deep_analyzer.cpp
+
+src/CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.i"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\industrial\modbus_deep_analyzer.cpp > CMakeFiles\protocol_parser_core.dir\parsers\industrial\modbus_deep_analyzer.cpp.i
+
+src/CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.s"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\industrial\modbus_deep_analyzer.cpp -o CMakeFiles\protocol_parser_core.dir\parsers\industrial\modbus_deep_analyzer.cpp.s
+
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/flags.make
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmp_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/network/icmp_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmp_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmp_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmp_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\network\icmp_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\network\icmp_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\network\icmp_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmp_parser.cpp.i: cmake_force
@@ -300,7 +375,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmpv6_parser.cpp.obj: s
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmpv6_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmpv6_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/network/icmpv6_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmpv6_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmpv6_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmpv6_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmpv6_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\network\icmpv6_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\network\icmpv6_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\network\icmpv6_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmpv6_parser.cpp.i: cmake_force
@@ -315,7 +390,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv4_parser.cpp.obj: src
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv4_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv4_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/network/ipv4_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv4_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv4_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv4_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv4_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\network\ipv4_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\network\ipv4_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\network\ipv4_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv4_parser.cpp.i: cmake_force
@@ -330,7 +405,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.obj: src
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/network/ipv6_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\network\ipv6_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\network\ipv6_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\network\ipv6_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.i: cmake_force
@@ -341,11 +416,26 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.s: cmake
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.s"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\network\ipv6_parser.cpp -o CMakeFiles\protocol_parser_core.dir\parsers\network\ipv6_parser.cpp.s
 
+src/CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/flags.make
+src/CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
+src/CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/security/tls_deep_inspector.cpp
+src/CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.obj"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\security\tls_deep_inspector.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\security\tls_deep_inspector.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\security\tls_deep_inspector.cpp
+
+src/CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.i"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\security\tls_deep_inspector.cpp > CMakeFiles\protocol_parser_core.dir\parsers\security\tls_deep_inspector.cpp.i
+
+src/CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.s"
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\security\tls_deep_inspector.cpp -o CMakeFiles\protocol_parser_core.dir\parsers\security\tls_deep_inspector.cpp.s
+
 src/CMakeFiles/protocol_parser_core.dir/parsers/transport/sctp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/flags.make
 src/CMakeFiles/protocol_parser_core.dir/parsers/transport/sctp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/transport/sctp_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/transport/sctp_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/transport/sctp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/transport/sctp_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/transport/sctp_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/transport/sctp_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\transport\sctp_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\transport\sctp_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\transport\sctp_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/transport/sctp_parser.cpp.i: cmake_force
@@ -360,7 +450,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/transport/tcp_parser.cpp.obj: sr
 src/CMakeFiles/protocol_parser_core.dir/parsers/transport/tcp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/transport/tcp_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/transport/tcp_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/transport/tcp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/transport/tcp_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/transport/tcp_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/transport/tcp_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\transport\tcp_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\transport\tcp_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\transport\tcp_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/transport/tcp_parser.cpp.i: cmake_force
@@ -375,7 +465,7 @@ src/CMakeFiles/protocol_parser_core.dir/parsers/transport/udp_parser.cpp.obj: sr
 src/CMakeFiles/protocol_parser_core.dir/parsers/transport/udp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/parsers/transport/udp_parser.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/parsers/transport/udp_parser.cpp
 src/CMakeFiles/protocol_parser_core.dir/parsers/transport/udp_parser.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/transport/udp_parser.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/parsers/transport/udp_parser.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/parsers/transport/udp_parser.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\parsers\transport\udp_parser.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\parsers\transport\udp_parser.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\parsers\transport\udp_parser.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/parsers/transport/udp_parser.cpp.i: cmake_force
@@ -390,7 +480,7 @@ src/CMakeFiles/protocol_parser_core.dir/statistics/traffic_statistics.cpp.obj: s
 src/CMakeFiles/protocol_parser_core.dir/statistics/traffic_statistics.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/statistics/traffic_statistics.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/statistics/traffic_statistics.cpp
 src/CMakeFiles/protocol_parser_core.dir/statistics/traffic_statistics.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/statistics/traffic_statistics.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/statistics/traffic_statistics.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/statistics/traffic_statistics.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\statistics\traffic_statistics.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\statistics\traffic_statistics.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\statistics\traffic_statistics.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/statistics/traffic_statistics.cpp.i: cmake_force
@@ -405,7 +495,7 @@ src/CMakeFiles/protocol_parser_core.dir/utils/network_utils.cpp.obj: src/CMakeFi
 src/CMakeFiles/protocol_parser_core.dir/utils/network_utils.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/includes_CXX.rsp
 src/CMakeFiles/protocol_parser_core.dir/utils/network_utils.cpp.obj: C:/Users/huangxinjie/Documents/CppProjects/protocol_praser/src/utils/network_utils.cpp
 src/CMakeFiles/protocol_parser_core.dir/utils/network_utils.cpp.obj: src/CMakeFiles/protocol_parser_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/utils/network_utils.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building CXX object src/CMakeFiles/protocol_parser_core.dir/utils/network_utils.cpp.obj"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/protocol_parser_core.dir/utils/network_utils.cpp.obj -MF CMakeFiles\protocol_parser_core.dir\utils\network_utils.cpp.obj.d -o CMakeFiles\protocol_parser_core.dir\utils\network_utils.cpp.obj -c C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\src\utils\network_utils.cpp
 
 src/CMakeFiles/protocol_parser_core.dir/utils/network_utils.cpp.i: cmake_force
@@ -418,24 +508,30 @@ src/CMakeFiles/protocol_parser_core.dir/utils/network_utils.cpp.s: cmake_force
 
 # Object files for target protocol_parser_core
 protocol_parser_core_OBJECTS = \
+"CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/core/buffer_view.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/detection/protocol_detection.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/application/dhcp_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/application/dns_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.obj" \
+"CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/application/http_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.obj" \
+"CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/application/pop3_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/application/snmp_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/application/ssh_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.obj" \
+"CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/base_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/datalink/arp_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.obj" \
+"CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/network/icmp_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/network/icmpv6_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/network/ipv4_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.obj" \
+"CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/transport/sctp_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/transport/tcp_parser.cpp.obj" \
 "CMakeFiles/protocol_parser_core.dir/parsers/transport/udp_parser.cpp.obj" \
@@ -445,24 +541,30 @@ protocol_parser_core_OBJECTS = \
 # External object files for target protocol_parser_core
 protocol_parser_core_EXTERNAL_OBJECTS =
 
+src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/core/buffer_view.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/detection/protocol_detection.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/application/dhcp_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/application/dns_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.obj
+src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/application/http_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.obj
+src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/application/pop3_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/application/snmp_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/application/ssh_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.obj
+src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/base_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/arp_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.obj
+src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmp_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/network/icmpv6_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv4_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.obj
+src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/transport/sctp_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/transport/tcp_parser.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/parsers/transport/udp_parser.cpp.obj
@@ -470,7 +572,7 @@ src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/statistic
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/utils/network_utils.cpp.obj
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/build.make
 src/libprotocol_parser_core.a: src/CMakeFiles/protocol_parser_core.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Linking CXX static library libprotocol_parser_core.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Linking CXX static library libprotocol_parser_core.a"
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && $(CMAKE_COMMAND) -P CMakeFiles\protocol_parser_core.dir\cmake_clean_target.cmake
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build\src && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\protocol_parser_core.dir\link.txt --verbose=$(VERBOSE)
 

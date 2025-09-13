@@ -174,6 +174,30 @@ protocol_parser_core/fast:
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/build
 .PHONY : protocol_parser_core/fast
 
+ai/protocol_detector.obj: ai/protocol_detector.cpp.obj
+.PHONY : ai/protocol_detector.obj
+
+# target to build an object file
+ai/protocol_detector.cpp.obj:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.obj
+.PHONY : ai/protocol_detector.cpp.obj
+
+ai/protocol_detector.i: ai/protocol_detector.cpp.i
+.PHONY : ai/protocol_detector.i
+
+# target to preprocess a source file
+ai/protocol_detector.cpp.i:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.i
+.PHONY : ai/protocol_detector.cpp.i
+
+ai/protocol_detector.s: ai/protocol_detector.cpp.s
+.PHONY : ai/protocol_detector.s
+
+# target to generate assembly for a file
+ai/protocol_detector.cpp.s:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/ai/protocol_detector.cpp.s
+.PHONY : ai/protocol_detector.cpp.s
+
 core/buffer_view.obj: core/buffer_view.cpp.obj
 .PHONY : core/buffer_view.obj
 
@@ -294,6 +318,30 @@ parsers/application/ftp_parser.cpp.s:
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/ftp_parser.cpp.s
 .PHONY : parsers/application/ftp_parser.cpp.s
 
+parsers/application/grpc_parser.obj: parsers/application/grpc_parser.cpp.obj
+.PHONY : parsers/application/grpc_parser.obj
+
+# target to build an object file
+parsers/application/grpc_parser.cpp.obj:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.obj
+.PHONY : parsers/application/grpc_parser.cpp.obj
+
+parsers/application/grpc_parser.i: parsers/application/grpc_parser.cpp.i
+.PHONY : parsers/application/grpc_parser.i
+
+# target to preprocess a source file
+parsers/application/grpc_parser.cpp.i:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.i
+.PHONY : parsers/application/grpc_parser.cpp.i
+
+parsers/application/grpc_parser.s: parsers/application/grpc_parser.cpp.s
+.PHONY : parsers/application/grpc_parser.s
+
+# target to generate assembly for a file
+parsers/application/grpc_parser.cpp.s:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/grpc_parser.cpp.s
+.PHONY : parsers/application/grpc_parser.cpp.s
+
 parsers/application/http_parser.obj: parsers/application/http_parser.cpp.obj
 .PHONY : parsers/application/http_parser.obj
 
@@ -341,6 +389,30 @@ parsers/application/https_parser.s: parsers/application/https_parser.cpp.s
 parsers/application/https_parser.cpp.s:
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/https_parser.cpp.s
 .PHONY : parsers/application/https_parser.cpp.s
+
+parsers/application/mqtt_parser.obj: parsers/application/mqtt_parser.cpp.obj
+.PHONY : parsers/application/mqtt_parser.obj
+
+# target to build an object file
+parsers/application/mqtt_parser.cpp.obj:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.obj
+.PHONY : parsers/application/mqtt_parser.cpp.obj
+
+parsers/application/mqtt_parser.i: parsers/application/mqtt_parser.cpp.i
+.PHONY : parsers/application/mqtt_parser.i
+
+# target to preprocess a source file
+parsers/application/mqtt_parser.cpp.i:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.i
+.PHONY : parsers/application/mqtt_parser.cpp.i
+
+parsers/application/mqtt_parser.s: parsers/application/mqtt_parser.cpp.s
+.PHONY : parsers/application/mqtt_parser.s
+
+# target to generate assembly for a file
+parsers/application/mqtt_parser.cpp.s:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/mqtt_parser.cpp.s
+.PHONY : parsers/application/mqtt_parser.cpp.s
 
 parsers/application/pop3_parser.obj: parsers/application/pop3_parser.cpp.obj
 .PHONY : parsers/application/pop3_parser.obj
@@ -438,6 +510,30 @@ parsers/application/telnet_parser.cpp.s:
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/telnet_parser.cpp.s
 .PHONY : parsers/application/telnet_parser.cpp.s
 
+parsers/application/websocket_parser.obj: parsers/application/websocket_parser.cpp.obj
+.PHONY : parsers/application/websocket_parser.obj
+
+# target to build an object file
+parsers/application/websocket_parser.cpp.obj:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.obj
+.PHONY : parsers/application/websocket_parser.cpp.obj
+
+parsers/application/websocket_parser.i: parsers/application/websocket_parser.cpp.i
+.PHONY : parsers/application/websocket_parser.i
+
+# target to preprocess a source file
+parsers/application/websocket_parser.cpp.i:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.i
+.PHONY : parsers/application/websocket_parser.cpp.i
+
+parsers/application/websocket_parser.s: parsers/application/websocket_parser.cpp.s
+.PHONY : parsers/application/websocket_parser.s
+
+# target to generate assembly for a file
+parsers/application/websocket_parser.cpp.s:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/application/websocket_parser.cpp.s
+.PHONY : parsers/application/websocket_parser.cpp.s
+
 parsers/base_parser.obj: parsers/base_parser.cpp.obj
 .PHONY : parsers/base_parser.obj
 
@@ -509,6 +605,30 @@ parsers/datalink/ethernet_parser.s: parsers/datalink/ethernet_parser.cpp.s
 parsers/datalink/ethernet_parser.cpp.s:
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/datalink/ethernet_parser.cpp.s
 .PHONY : parsers/datalink/ethernet_parser.cpp.s
+
+parsers/industrial/modbus_deep_analyzer.obj: parsers/industrial/modbus_deep_analyzer.cpp.obj
+.PHONY : parsers/industrial/modbus_deep_analyzer.obj
+
+# target to build an object file
+parsers/industrial/modbus_deep_analyzer.cpp.obj:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.obj
+.PHONY : parsers/industrial/modbus_deep_analyzer.cpp.obj
+
+parsers/industrial/modbus_deep_analyzer.i: parsers/industrial/modbus_deep_analyzer.cpp.i
+.PHONY : parsers/industrial/modbus_deep_analyzer.i
+
+# target to preprocess a source file
+parsers/industrial/modbus_deep_analyzer.cpp.i:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.i
+.PHONY : parsers/industrial/modbus_deep_analyzer.cpp.i
+
+parsers/industrial/modbus_deep_analyzer.s: parsers/industrial/modbus_deep_analyzer.cpp.s
+.PHONY : parsers/industrial/modbus_deep_analyzer.s
+
+# target to generate assembly for a file
+parsers/industrial/modbus_deep_analyzer.cpp.s:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/industrial/modbus_deep_analyzer.cpp.s
+.PHONY : parsers/industrial/modbus_deep_analyzer.cpp.s
 
 parsers/network/icmp_parser.obj: parsers/network/icmp_parser.cpp.obj
 .PHONY : parsers/network/icmp_parser.obj
@@ -605,6 +725,30 @@ parsers/network/ipv6_parser.s: parsers/network/ipv6_parser.cpp.s
 parsers/network/ipv6_parser.cpp.s:
 	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/network/ipv6_parser.cpp.s
 .PHONY : parsers/network/ipv6_parser.cpp.s
+
+parsers/security/tls_deep_inspector.obj: parsers/security/tls_deep_inspector.cpp.obj
+.PHONY : parsers/security/tls_deep_inspector.obj
+
+# target to build an object file
+parsers/security/tls_deep_inspector.cpp.obj:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.obj
+.PHONY : parsers/security/tls_deep_inspector.cpp.obj
+
+parsers/security/tls_deep_inspector.i: parsers/security/tls_deep_inspector.cpp.i
+.PHONY : parsers/security/tls_deep_inspector.i
+
+# target to preprocess a source file
+parsers/security/tls_deep_inspector.cpp.i:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.i
+.PHONY : parsers/security/tls_deep_inspector.cpp.i
+
+parsers/security/tls_deep_inspector.s: parsers/security/tls_deep_inspector.cpp.s
+.PHONY : parsers/security/tls_deep_inspector.s
+
+# target to generate assembly for a file
+parsers/security/tls_deep_inspector.cpp.s:
+	cd /d C:\Users\huangxinjie\Documents\CppProjects\protocol_praser\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\protocol_parser_core.dir\build.make src/CMakeFiles/protocol_parser_core.dir/parsers/security/tls_deep_inspector.cpp.s
+.PHONY : parsers/security/tls_deep_inspector.cpp.s
 
 parsers/transport/sctp_parser.obj: parsers/transport/sctp_parser.cpp.obj
 .PHONY : parsers/transport/sctp_parser.obj
@@ -739,6 +883,9 @@ help:
 	@echo ... list_install_components
 	@echo ... rebuild_cache
 	@echo ... protocol_parser_core
+	@echo ... ai/protocol_detector.obj
+	@echo ... ai/protocol_detector.i
+	@echo ... ai/protocol_detector.s
 	@echo ... core/buffer_view.obj
 	@echo ... core/buffer_view.i
 	@echo ... core/buffer_view.s
@@ -754,12 +901,18 @@ help:
 	@echo ... parsers/application/ftp_parser.obj
 	@echo ... parsers/application/ftp_parser.i
 	@echo ... parsers/application/ftp_parser.s
+	@echo ... parsers/application/grpc_parser.obj
+	@echo ... parsers/application/grpc_parser.i
+	@echo ... parsers/application/grpc_parser.s
 	@echo ... parsers/application/http_parser.obj
 	@echo ... parsers/application/http_parser.i
 	@echo ... parsers/application/http_parser.s
 	@echo ... parsers/application/https_parser.obj
 	@echo ... parsers/application/https_parser.i
 	@echo ... parsers/application/https_parser.s
+	@echo ... parsers/application/mqtt_parser.obj
+	@echo ... parsers/application/mqtt_parser.i
+	@echo ... parsers/application/mqtt_parser.s
 	@echo ... parsers/application/pop3_parser.obj
 	@echo ... parsers/application/pop3_parser.i
 	@echo ... parsers/application/pop3_parser.s
@@ -772,6 +925,9 @@ help:
 	@echo ... parsers/application/telnet_parser.obj
 	@echo ... parsers/application/telnet_parser.i
 	@echo ... parsers/application/telnet_parser.s
+	@echo ... parsers/application/websocket_parser.obj
+	@echo ... parsers/application/websocket_parser.i
+	@echo ... parsers/application/websocket_parser.s
 	@echo ... parsers/base_parser.obj
 	@echo ... parsers/base_parser.i
 	@echo ... parsers/base_parser.s
@@ -781,6 +937,9 @@ help:
 	@echo ... parsers/datalink/ethernet_parser.obj
 	@echo ... parsers/datalink/ethernet_parser.i
 	@echo ... parsers/datalink/ethernet_parser.s
+	@echo ... parsers/industrial/modbus_deep_analyzer.obj
+	@echo ... parsers/industrial/modbus_deep_analyzer.i
+	@echo ... parsers/industrial/modbus_deep_analyzer.s
 	@echo ... parsers/network/icmp_parser.obj
 	@echo ... parsers/network/icmp_parser.i
 	@echo ... parsers/network/icmp_parser.s
@@ -793,6 +952,9 @@ help:
 	@echo ... parsers/network/ipv6_parser.obj
 	@echo ... parsers/network/ipv6_parser.i
 	@echo ... parsers/network/ipv6_parser.s
+	@echo ... parsers/security/tls_deep_inspector.obj
+	@echo ... parsers/security/tls_deep_inspector.i
+	@echo ... parsers/security/tls_deep_inspector.s
 	@echo ... parsers/transport/sctp_parser.obj
 	@echo ... parsers/transport/sctp_parser.i
 	@echo ... parsers/transport/sctp_parser.s
