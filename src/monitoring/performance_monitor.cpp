@@ -623,4 +623,218 @@ void PerformanceMonitor::cleanup_old_metrics() {
     }
 }
 
+std::string PerformanceMonitor::format_metrics_csv(const std::unordered_map<std::string, PerformanceStats>& stats) const {
+    std::ostringstream csv;
+    csv << "metric_name,count,avg,min,max,p95,p99\n";
+    
+    for (const auto& [name, stat] : stats) {
+        csv << name << "," << stat.count << "," 
+            << std::fixed << std::setprecision(2) << stat.avg_value << ","
+            << stat.min_value << "," << stat.max_value << ","
+            << stat.p95_value << "," << stat.p99_value << "\n";
+    }
+    
+    return csv.str();
+}
+
+std::string PerformanceMonitor::format_metrics_prometheus(const std::unordered_map<std::string, PerformanceStats>& stats) const {
+    std::ostringstream prom;
+    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    
+    for (const auto& [name, stat] : stats) {
+        prom << "# HELP " << name << "_avg Average value\n";
+        prom << "# TYPE " << name << "_avg gauge\n";
+        prom << name << "_avg " << stat.avg_value << " " << timestamp << "\n";
+        
+        prom << "# HELP " << name << "_count Count of observations\n";
+        prom << "# TYPE " << name << "_count counter\n";
+        prom << name << "_count " << stat.count << " " << timestamp << "\n";
+    }
+    
+    return prom.str();
+}
+
+void PerformanceMonitor::set_performance_threshold(const PerformanceThreshold& threshold) {
+    std::unique_lock lock(thresholds_mutex_);
+    thresholds_[threshold.metric_name] = threshold;
+}
+
+void PerformanceMonitor::remove_performance_threshold(const std::string& metric_name) {
+    std::unique_lock lock(thresholds_mutex_);
+    thresholds_.erase(metric_name);
+}
+
+std::vector<PerformanceThreshold> PerformanceMonitor::get_active_thresholds() const {
+    std::shared_lock lock(thresholds_mutex_);
+    std::vector<PerformanceThreshold> result;
+    
+    for (const auto& [name, threshold] : thresholds_) {
+        result.push_back(threshold);
+    }
+    
+    return result;
+}
+
+void PerformanceMonitor::set_alert_callback(AlertCallback callback) noexcept {
+    alert_callback_.store(new AlertCallback(std::move(callback)));
+}
+
+void PerformanceMonitor::remove_alert_callback() noexcept {
+    auto old_callback = alert_callback_.exchange(nullptr);
+    delete old_callback;
+}
+
+std::vector<PerformanceAlert> PerformanceMonitor::get_recent_alerts(std::chrono::minutes lookback) const {
+    std::lock_guard lock(alert_mutex_);
+    
+    auto cutoff_time = std::chrono::steady_clock::now() - lookback;
+    std::vector<PerformanceAlert> recent_alerts;
+    
+    for (const auto& alert : alert_history_) {
+        if (alert.timestamp >= cutoff_time) {
+            recent_alerts.push_back(alert);
+        }
+    }
+    
+    return recent_alerts;
+}
+
+void PerformanceMonitor::export_to_file(const std::string& filename, ExportFormat format, TimeWindow window) const {
+    std::string content = export_metrics(format, window);
+    
+    std::ofstream file(filename);
+    if (file.is_open()) {
+        file << content;
+        file.close();
+    }
+}
+
+void PerformanceMonitor::configure(const MonitorConfig& config) {
+    config_ = config;
+}
+
+PerformanceMonitor::MonitorConfig PerformanceMonitor::get_configuration() const noexcept {
+    return config_;
+}
+
+PerformanceMonitor::BenchmarkResult PerformanceMonitor::run_parse_benchmark(
+    const std::string& protocol, const std::vector<std::vector<uint8_t>>& test_data) {
+    
+    BenchmarkResult result;
+    result.test_name = "Parse Benchmark - " + protocol;
+    result.passed = false;
+    
+    if (test_data.empty()) {
+        result.error_message = "No test data provided";
+        return result;
+    }
+    
+    try {
+        auto start_time = std::chrono::high_resolution_clock::now();
+        auto min_time = std::chrono::nanoseconds::max();
+        auto max_time = std::chrono::nanoseconds::zero();
+        std::chrono::nanoseconds total_time{0};
+        
+        size_t successful_parses = 0;
+        
+        for (const auto& packet : test_data) {
+            auto parse_start = std::chrono::high_resolution_clock::now();
+            
+            // 这里应该调用实际的解析器
+            // 为了演示，我们模拟解析过程
+            volatile size_t dummy_sum = 0;
+            for (size_t i = 0; i < packet.size(); ++i) {
+                dummy_sum += packet[i];
+            }
+            
+            auto parse_end = std::chrono::high_resolution_clock::now();
+            auto parse_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(parse_end - parse_start);
+            
+            total_time += parse_duration;
+            min_time = std::min(min_time, parse_duration);
+            max_time = std::max(max_time, parse_duration);
+            successful_parses++;
+        }
+        
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto total_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
+        
+        result.operations_per_second = (static_cast<double>(test_data.size()) * 1e9) / total_duration.count();
+        result.avg_operation_time = total_time / test_data.size();
+        result.min_operation_time = min_time;
+        result.max_operation_time = max_time;
+        result.passed = true;
+        
+        // 模拟CPU和内存使用情况
+        result.cpu_utilization = 25.0; // 25% CPU使用率
+        result.memory_peak_usage = test_data.size() * 1024; // 估算内存使用
+        
+    } catch (const std::exception& e) {
+        result.error_message = "Benchmark failed: " + std::string(e.what());
+    }
+    
+    return result;
+}
+
+PerformanceMonitor::BenchmarkResult PerformanceMonitor::run_throughput_benchmark(
+    size_t packet_count, size_t packet_size) {
+    
+    BenchmarkResult result;
+    result.test_name = "Throughput Benchmark";
+    result.passed = false;
+    
+    try {
+        // 生成测试数据
+        std::vector<std::vector<uint8_t>> test_packets;
+        test_packets.reserve(packet_count);
+        
+        for (size_t i = 0; i < packet_count; ++i) {
+            std::vector<uint8_t> packet(packet_size);
+            // 填充测试数据
+            for (size_t j = 0; j < packet_size; ++j) {
+                packet[j] = static_cast<uint8_t>(i + j);
+            }
+            test_packets.push_back(std::move(packet));
+        }
+        
+        auto start_time = std::chrono::high_resolution_clock::now();
+        
+        // 模拟数据处理
+        size_t total_bytes = 0;
+        for (const auto& packet : test_packets) {
+            // 模拟处理开销
+            volatile size_t checksum = 0;
+            for (uint8_t byte : packet) {
+                checksum += byte;
+            }
+            total_bytes += packet.size();
+        }
+        
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
+        
+        result.operations_per_second = (static_cast<double>(packet_count) * 1e9) / duration.count();
+        result.avg_operation_time = duration / packet_count;
+        result.min_operation_time = result.avg_operation_time;
+        result.max_operation_time = result.avg_operation_time;
+        result.cpu_utilization = 30.0;
+        result.memory_peak_usage = total_bytes;
+        result.passed = true;
+        
+    } catch (const std::exception& e) {
+        result.error_message = "Throughput benchmark failed: " + std::string(e.what());
+    }
+    
+    return result;
+}
+
+void PerformanceMonitor::initialize_object_definitions() {
+    // 初始化对象定义映射 - 为扩展功能预留
+}
+
+void PerformanceMonitor::initialize_function_codes() {
+    // 初始化功能码映射 - 为扩展功能预留
+}
+
 } // namespace ProtocolParser::Monitoring

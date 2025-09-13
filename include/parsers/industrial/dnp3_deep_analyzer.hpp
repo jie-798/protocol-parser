@@ -63,8 +63,24 @@ struct DNP3Object {
     uint16_t range_stop = 0;
     std::vector<uint8_t> object_data;
     
-    std::string get_object_name() const;
-    std::string get_object_description() const;
+    std::string get_object_name() const {
+        std::string key = std::to_string(group) + ":" + std::to_string(variation);
+        
+        // 返回对象描述
+        if (group == 1 && variation == 1) return "Binary Input - Packed Format";
+        if (group == 1 && variation == 2) return "Binary Input - With Flags";
+        if (group == 10 && variation == 1) return "Binary Output - Packed Format";
+        if (group == 20 && variation == 1) return "Binary Counter - 32-bit With Flag";
+        if (group == 30 && variation == 1) return "Analog Input - 32-bit With Flag";
+        if (group == 40 && variation == 1) return "Analog Output Status - 32-bit With Flag";
+        
+        return "Object " + key;
+    }
+    
+    std::string get_object_description() const {
+        return get_object_name() + " (Group: " + std::to_string(group) + 
+               ", Variation: " + std::to_string(variation) + ")";
+    }
 };
 
 // DNP3安全分析结果
