@@ -1,14 +1,41 @@
 # 协议解析器核心库构建配置
 
-# 创建最小可编译版本，专注SOTA级别的live_capture可视化功能
+# 核心组件
 file(GLOB_RECURSE CORE_SOURCES
     "core/buffer_view.cpp"
+    "core/buffer_pool.cpp"
+    "core/tcp_reassembler.cpp"
+)
+
+# 工具类
+file(GLOB_RECURSE UTILS_SOURCES
     "utils/*.cpp"
-    "monitoring/performance_monitor.cpp"
+)
+
+# 监控组件
+file(GLOB_RECURSE MONITORING_SOURCES
+    "monitoring/*.cpp"
+)
+
+# 协议解析器
+file(GLOB_RECURSE PARSER_SOURCES
+    "parsers/**/*.cpp"
+)
+
+# 检测和AI组件
+file(GLOB_RECURSE DETECTION_SOURCES
+    "detection/*.cpp"
+    "ai/*.cpp"
 )
 
 # 合并所有源文件
-set(ALL_SOURCES ${CORE_SOURCES})
+set(ALL_SOURCES
+    ${CORE_SOURCES}
+    ${UTILS_SOURCES}
+    ${MONITORING_SOURCES}
+    ${PARSER_SOURCES}
+    ${DETECTION_SOURCES}
+)
 
 # 创建核心库
 add_library(protocol_parser_core STATIC ${ALL_SOURCES})
