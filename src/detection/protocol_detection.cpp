@@ -8,7 +8,7 @@
 #include <mutex>
 #include <shared_mutex>
 
-namespace ProtocolParser::Detection {
+namespace protocol_parser::detection {
 
 // ProtocolSignature::SignaturePattern 实现
 bool ProtocolSignature::SignaturePattern::matches(const uint8_t* data, size_t size) const noexcept {
@@ -680,4 +680,4 @@ std::string buffer_to_hex_string(const protocol_parser::core::BufferView& buffer
 
 } // namespace Utils
 
-} // namespace ProtocolParser::Detection
+} // namespace protocol_parser::detection

@@ -747,26 +747,8 @@ bool DNP3DeepAnalyzer::parse_dnp3_packet(const protocol_parser::core::BufferView
     // 检查是否为完整消息
     dnp3_info.complete_message = (dnp3_info.transport_info.fin && dnp3_info.transport_info.fir);
     dnp3_info.valid_frame = dnp3_info.parse_errors.empty();
-    
+
     return true;
-}
-
-// 添加缺少的方法实现
-bool DNP3DeepAnalyzer::detect_dos_attack(const DNP3Info& info) const {
-    // 简单的DoS检测逻辑
-    if (info.datalink_info.length > 200) {
-        return true; // 数据包过大可能是DoS攻击
-    }
-    return false;
-}
-
-bool DNP3DeepAnalyzer::detect_scan_attempt(const DNP3Info& info) const {
-    // 检测扫描行为
-    if (info.application_info.function_code == 0x01 && 
-        info.application_info.objects.empty()) {
-        return true; // 空的读取请求可能是扫描
-    }
-    return false;
 }
 
 } // namespace protocol_parser::parsers::industrial

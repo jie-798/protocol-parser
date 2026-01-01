@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <sstream>
 
-namespace protocol_parser::parsers::industrial {
+namespace protocol_parser::industrial {
 
 ModbusDeepAnalyzer::ModbusDeepAnalyzer()
     : security_monitoring_enabled_(true)
@@ -57,36 +57,94 @@ bool ModbusDeepAnalyzer::parse_modbus_packet(const protocol_parser::core::Buffer
     if (!can_parse(buffer)) {
         return false;
     }
-    
-    // 重置信息结构
-    modbus_info = ModbusInfo{};
+
+    // 手动重置信息结构（不能使用赋值因为包含atomic成员）
+    modbus_info.variant = ModbusVariant::TCP;
+    modbus_info.transaction_id = 0;
+    modbus_info.protocol_id = 0;
+    modbus_info.length = 0;
+    modbus_info.unit_id = 0;
+    modbus_info.mbap_header = ModbusMBAPHeader{};
+    modbus_info.function_code = 0;
+    modbus_info.is_exception = false;
+    modbus_info.exception_code = 0;
+    modbus_info.exception_description.clear();
+    modbus_info.pdu = ModbusPDU{};
+    modbus_info.slave_id = 0;
+    modbus_info.crc = 0;
+    modbus_info.lrc = 0;
+    modbus_info.coils.clear();
+    modbus_info.registers.clear();
+    modbus_info.coil_values.clear();
+    modbus_info.register_values.clear();
+    modbus_info.data_payload.clear();
+    modbus_info.validation_errors.clear();
+    modbus_info.anomalies.clear();
+    modbus_info.device_info = ModbusDevice{};
+    modbus_info.is_request = true;
+    modbus_info.is_broadcast = false;
+    modbus_info.start_address = 0;
+    modbus_info.starting_address = 0;
+    modbus_info.quantity = 0;
+    modbus_info.register_count = 0;
+    modbus_info.and_mask = 0;
+    modbus_info.or_mask = 0;
+    modbus_info.read_starting_address = 0;
+    modbus_info.read_quantity = 0;
+    modbus_info.mei_type = 0;
+    modbus_info.device_id_code = 0;
+    modbus_info.object_id = 0;
+    modbus_info.master_ip.clear();
+    modbus_info.slave_ip.clear();
+    modbus_info.master_port = 0;
+    modbus_info.slave_port = 502;
+
+    // 重置statistics（包含atomic成员）
+    modbus_info.statistics.total_requests.store(0);
+    modbus_info.statistics.total_responses.store(0);
+    modbus_info.statistics.read_requests.store(0);
+    modbus_info.statistics.write_requests.store(0);
+    modbus_info.statistics.exception_responses.store(0);
+    modbus_info.statistics.timeout_errors.store(0);
+    modbus_info.statistics.crc_errors.store(0);
+    modbus_info.statistics.frame_errors.store(0);
+    modbus_info.statistics.bytes_transmitted.store(0);
+    modbus_info.statistics.bytes_received.store(0);
+    modbus_info.statistics.function_code_counts.clear();
+    modbus_info.statistics.slave_message_counts.clear();
+    modbus_info.statistics.exception_counts.clear();
+
+    modbus_info.raw_data.clear();
+    modbus_info.is_valid = false;
+    modbus_info.error_message.clear();
+    modbus_info.flow_id = 0;
     modbus_info.parse_timestamp = std::chrono::steady_clock::now();
-    
+
     // 解析MBAP头
     if (!parse_mbap_header(buffer, modbus_info)) {
         return false;
     }
-    
+
     // 解析PDU
     size_t pdu_offset = 6; // MBAP头后
     protocol_parser::core::BufferView pdu_buffer(buffer.data() + pdu_offset, modbus_info.length);
-    
+
     if (!parse_pdu(pdu_buffer, modbus_info)) {
         return false;
     }
-    
+
     // 执行深度分析
     if (security_monitoring_enabled_) {
         modbus_info.security_analysis = analyze_security(modbus_info);
     }
-    
+
     if (anomaly_detection_enabled_) {
         analyze_anomalies(modbus_info);
     }
-    
+
     // 更新统计信息
     update_statistics(modbus_info);
-    
+
     return true;
 }
 
@@ -358,22 +416,23 @@ bool ModbusDeepAnalyzer::detect_scan_attempt(const ModbusInfo& info) const {
             }),
         scan_attempts_.end()
     );
-    
+
     // 记录当前请求
-    scan_attempts_.push_back({now, info.unit_id, info.function_code, info.starting_address});
-    
+    uint8_t unit_id = (info.variant == ModbusVariant::TCP) ? info.mbap_header.unit_id : info.slave_id;
+    scan_attempts_.push_back({now, unit_id, static_cast<uint8_t>(info.pdu.function_code), info.start_address});
+
     // 检测扫描模式
-    if (scan_attempts_.size() > max_scan_requests_) {
+    if (scan_attempts_.size() > 100) {  // 固定阈值
         return true;
     }
-    
+
     // 检测连续地址扫描
     size_t consecutive_count = 0;
     uint16_t last_address = 0;
     bool first = true;
-    
+
     for (const auto& attempt : scan_attempts_) {
-        if (attempt.unit_id == info.unit_id && attempt.function_code == info.function_code) {
+        if (attempt.unit_id == unit_id && attempt.function_code == static_cast<uint8_t>(info.pdu.function_code)) {
             if (!first && attempt.starting_address == last_address + 1) {
                 consecutive_count++;
                 if (consecutive_count > 10) {
@@ -386,26 +445,27 @@ bool ModbusDeepAnalyzer::detect_scan_attempt(const ModbusInfo& info) const {
             first = false;
         }
     }
-    
+
     return false;
 }
 
 bool ModbusDeepAnalyzer::detect_unauthorized_access(const ModbusInfo& info) const {
     // 检测访问未授权的单元ID
-    if (info.unit_id == 0 || info.unit_id > 247) {
+    uint8_t unit_id = (info.variant == ModbusVariant::TCP) ? info.mbap_header.unit_id : info.slave_id;
+    if (unit_id == 0 || unit_id > 247) {
         return true;
     }
-    
+
     // 检测访问保留地址范围
-    if (info.starting_address >= 40000 && info.starting_address < 40100) {
+    if (info.start_address >= 40000 && info.start_address < 40100) {
         return true; // 假设这是保留范围
     }
-    
+
     // 检测异常大的数据请求
     if (info.quantity > 125) {
         return true;
     }
-    
+
     return false;
 }
 
@@ -490,39 +550,54 @@ uint32_t ModbusDeepAnalyzer::calculate_security_score(const ModbusSecurityAnalys
 
 void ModbusDeepAnalyzer::update_statistics(const ModbusInfo& info) {
     std::lock_guard<std::mutex> lock(stats_mutex_);
-    
-    stats_.total_packets++;
-    stats_.function_code_counts[info.function_code]++;
-    stats_.unit_id_counts[info.unit_id]++;
-    
+
+    internal_stats_.total_packets++;
+    internal_stats_.function_code_counts[info.function_code]++;
+    internal_stats_.unit_id_counts[info.unit_id]++;
+
     if (info.is_exception) {
-        stats_.exception_count++;
-        stats_.exception_code_counts[info.exception_code]++;
+        internal_stats_.exception_count++;
+        internal_stats_.exception_code_counts[info.exception_code]++;
     }
-    
+
     if (is_write_function(info.function_code)) {
-        stats_.write_operations++;
+        internal_stats_.write_operations++;
     } else {
-        stats_.read_operations++;
+        internal_stats_.read_operations++;
     }
-    
+
     if (!info.anomalies.empty()) {
-        stats_.anomaly_count++;
+        internal_stats_.anomaly_count++;
     }
-    
+
     if (info.security_analysis.scan_detected) {
-        stats_.scan_attempts++;
+        internal_stats_.scan_attempts++;
     }
 }
 
 void ModbusDeepAnalyzer::reset_statistics() {
     std::lock_guard<std::mutex> lock(stats_mutex_);
-    stats_ = ModbusStatistics{};
+    internal_stats_ = InternalStats{};
+
+    // 手动重置atomic成员
+    global_stats_.total_requests.store(0);
+    global_stats_.total_responses.store(0);
+    global_stats_.read_requests.store(0);
+    global_stats_.write_requests.store(0);
+    global_stats_.exception_responses.store(0);
+    global_stats_.timeout_errors.store(0);
+    global_stats_.crc_errors.store(0);
+    global_stats_.frame_errors.store(0);
+    global_stats_.bytes_transmitted.store(0);
+    global_stats_.bytes_received.store(0);
+    global_stats_.function_code_counts.clear();
+    global_stats_.slave_message_counts.clear();
+    global_stats_.exception_counts.clear();
 }
 
-ModbusStatistics ModbusDeepAnalyzer::get_statistics() const {
+ModbusDeepAnalyzer::InternalStats ModbusDeepAnalyzer::get_statistics() const {
     std::lock_guard<std::mutex> lock(stats_mutex_);
-    return stats_;
+    return internal_stats_;
 }
 
 std::string ModbusDeepAnalyzer::generate_security_report(const ModbusInfo& info) const {
@@ -567,4 +642,4 @@ std::string ModbusDeepAnalyzer::generate_security_report(const ModbusInfo& info)
     return report.str();
 }
 
-} // namespace protocol_parser::parsers::industrial
+} // namespace protocol_parser::industrial

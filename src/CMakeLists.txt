@@ -9,8 +9,10 @@ file(GLOB_RECURSE CORE_SOURCES
 
 # 工具类
 file(GLOB_RECURSE UTILS_SOURCES
-    "utils/*.cpp"
+    "utils/network_utils.cpp"
+    "utils/simd_utils.cpp"
 )
+
 
 # 监控组件
 file(GLOB_RECURSE MONITORING_SOURCES
@@ -19,13 +21,35 @@ file(GLOB_RECURSE MONITORING_SOURCES
 
 # 协议解析器
 file(GLOB_RECURSE PARSER_SOURCES
-    "parsers/**/*.cpp"
+    "parsers/application/http_parser.cpp"
+    "parsers/application/https_parser.cpp"
+    "parsers/application/ftp_parser.cpp"
+    "parsers/application/ssh_parser.cpp"
+    "parsers/application/dns_parser.cpp"
+    "parsers/application/smtp_parser.cpp"
+    "parsers/application/pop3_parser.cpp"
+    "parsers/application/telnet_parser.cpp"
+    "parsers/application/snmp_parser.cpp"
+    "parsers/application/dhcp_parser.cpp"
+    # "parsers/application/grpc_parser.cpp"
+    "parsers/application/websocket_parser.cpp"
+    "parsers/application/sip_parser.cpp"
+    "parsers/application/mqtt_parser.cpp"
+    "parsers/datalink/*.cpp"
+    "parsers/network/*.cpp"
+    "parsers/transport/quic_parser.cpp"
+    "parsers/transport/rtp_parser.cpp"
+    "parsers/transport/tcp_parser.cpp"
+    "parsers/transport/udp_parser.cpp"
+    "parsers/transport/sctp_parser.cpp"
+    # "parsers/security/*.cpp"  # 暂时排除
+    "parsers/industrial/*.cpp"  # 重新启用工业协议解析器
 )
 
 # 检测和AI组件
 file(GLOB_RECURSE DETECTION_SOURCES
-    "detection/*.cpp"
-    "ai/*.cpp"
+    "detection/protocol_detection.cpp"
+    "ai/protocol_detector.cpp"
 )
 
 # 合并所有源文件
@@ -84,6 +108,20 @@ target_compile_definitions(protocol_parser_core PRIVATE
     $<$<CONFIG:Debug>:PROTOCOL_PARSER_DEBUG>
     $<$<CONFIG:Release>:PROTOCOL_PARSER_RELEASE>
 )
+
+# 为 simd_utils.cpp 添加AVX2编译选项
+if(MSVC)
+    target_compile_options(protocol_parser_core PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/arch:AVX2>
+    )
+    set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/utils/simd_utils.cpp
+        PROPERTIES COMPILE_FLAGS "/arch:AVX2"
+    )
+else()
+    set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/utils/simd_utils.cpp
+        PROPERTIES COMPILE_FLAGS "-mavx2 -mavx"
+    )
+endif()
 
 # 安装规则
 install(TARGETS protocol_parser_core

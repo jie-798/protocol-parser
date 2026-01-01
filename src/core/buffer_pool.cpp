@@ -12,26 +12,42 @@ namespace protocol_parser::core {
 BufferPool::SizeClassPool::SizeClassPool(size_t buffer_size, size_t initial_capacity)
     : buffer_size_(buffer_size)
     , capacity_(0)
-    , size_(0) {
-    reserve(initial_capacity);
+    , size_(0)
+    , blocks_(nullptr) {
+    expand_pool(initial_capacity);
 }
 
 BufferPool::SizeClassPool::~SizeClassPool() {
+    cleanup_blocks();
+}
+
+void BufferPool::SizeClassPool::cleanup_blocks() {
     // 释放所有内存块
-    for (auto& block : blocks_) {
-        if (block.data != nullptr) {
-            std::free(block.data);
+    if (blocks_ != nullptr) {
+        for (size_t i = 0; i < capacity_; ++i) {
+            if (blocks_[i].data != nullptr) {
+                #ifdef _WIN32
+                    _aligned_free(blocks_[i].data);
+                #else
+                    free(blocks_[i].data);
+                #endif
+            }
         }
+        // 释放块数组本身
+        free(blocks_);
+        blocks_ = nullptr;
     }
+    capacity_ = 0;
+    size_ = 0;
 }
 
 void* BufferPool::SizeClassPool::allocate() {
     // 尝试在已有块中查找空闲块
     size_t index = find_free_block();
 
-    if (index < blocks_.size()) {
+    if (index < capacity_) {
         blocks_[index].in_use.store(true, std::memory_order_release);
-        size_.fetch_add(1, std::memory_order_relaxed);
+        size_++;
         return blocks_[index].data;
     }
 
@@ -41,9 +57,9 @@ void* BufferPool::SizeClassPool::allocate() {
 
     // 再次查找
     index = find_free_block();
-    if (index < blocks_.size()) {
+    if (index < capacity_) {
         blocks_[index].in_use.store(true, std::memory_order_release);
-        size_.fetch_add(1, std::memory_order_relaxed);
+        size_++;
         return blocks_[index].data;
     }
 
@@ -56,10 +72,10 @@ void BufferPool::SizeClassPool::deallocate(void* ptr) {
     }
 
     // 查找对应的块
-    for (auto& block : blocks_) {
-        if (block.data == ptr) {
-            block.in_use.store(false, std::memory_order_release);
-            size_.fetch_sub(1, std::memory_order_relaxed);
+    for (size_t i = 0; i < capacity_; ++i) {
+        if (blocks_[i].data == ptr) {
+            blocks_[i].in_use.store(false, std::memory_order_release);
+            size_--;
             return;
         }
     }
@@ -68,7 +84,7 @@ void BufferPool::SizeClassPool::deallocate(void* ptr) {
 size_t BufferPool::SizeClassPool::find_free_block() {
     // 线性查找第一个空闲块
     // TODO: 可以优化为位图查找（SIMD）
-    for (size_t i = 0; i < blocks_.size(); ++i) {
+    for (size_t i = 0; i < capacity_; ++i) {
         bool expected = false;
         if (blocks_[i].in_use.compare_exchange_strong(
             expected, true,
@@ -77,35 +93,79 @@ size_t BufferPool::SizeClassPool::find_free_block() {
             return i;
         }
     }
-    return blocks_.size();  // 未找到
+    return capacity_;  // 未找到
 }
 
 void BufferPool::SizeClassPool::expand_pool(size_t additional_blocks) {
-    size_t old_size = blocks_.size();
-    size_t new_size = old_size + additional_blocks;
+    size_t old_capacity = capacity_;
+    size_t new_capacity = old_capacity + additional_blocks;
 
-    blocks_.resize(new_size);
+    // 重新分配块数组
+    Block* new_blocks = nullptr;
 
-    for (size_t i = old_size; i < new_size; ++i) {
-        // 分配对齐的内存（cache line 对齐）
-        #ifdef _WIN32
-            blocks_[i].data = _aligned_malloc(buffer_size_, 64);
-        #else
-            posix_memalign(&blocks_[i].data, 64, buffer_size_);
-        #endif
+    #ifdef _WIN32
+        new_blocks = static_cast<Block*>(_aligned_malloc(new_capacity * sizeof(Block), 64));
+    #else
+        posix_memalign(reinterpret_cast<void**>(&new_blocks), 64, new_capacity * sizeof(Block));
+    #endif
 
-        if (blocks_[i].data == nullptr) {
-            throw std::bad_alloc();
-        }
-
-        blocks_[i].in_use.store(false, std::memory_order_relaxed);
+    if (new_blocks == nullptr) {
+        throw std::bad_alloc();
     }
 
-    capacity_ = new_size;
+    // 初始化新块数组
+    for (size_t i = 0; i < new_capacity; ++i) {
+        new (&new_blocks[i]) Block();  // placement new
+
+        if (i < old_capacity && blocks_ != nullptr) {
+            // 复制旧块
+            new_blocks[i].data = blocks_[i].data;
+            // 复制原子状态（注意：这里是拷贝构造，原子变量不允许，所以需要特殊处理）
+            bool in_use = blocks_[i].in_use.load(std::memory_order_relaxed);
+            new_blocks[i].in_use.store(in_use, std::memory_order_relaxed);
+        } else {
+            // 新块：分配内存
+            #ifdef _WIN32
+                new_blocks[i].data = _aligned_malloc(buffer_size_, 64);
+            #else
+                posix_memalign(&new_blocks[i].data, 64, buffer_size_);
+            #endif
+
+            if (new_blocks[i].data == nullptr) {
+                // 清理已分配的内存
+                for (size_t j = 0; j < i; ++j) {
+                    if (new_blocks[j].data != nullptr) {
+                        #ifdef _WIN32
+                            _aligned_free(new_blocks[j].data);
+                        #else
+                            free(new_blocks[j].data);
+                        #endif
+                    }
+                }
+                #ifdef _WIN32
+                    _aligned_free(new_blocks);
+                #else
+                    free(new_blocks);
+                #endif
+                throw std::bad_alloc();
+            }
+        }
+    }
+
+    // 释放旧数组
+    if (blocks_ != nullptr) {
+        #ifdef _WIN32
+            _aligned_free(blocks_);
+        #else
+            free(blocks_);
+        #endif
+    }
+
+    blocks_ = new_blocks;
+    capacity_ = new_capacity;
 }
 
 void BufferPool::SizeClassPool::reserve(size_t additional_capacity) {
-    std::lock_guard<std::mutex> lock(mutex_);
     if (capacity_ < additional_capacity) {
         expand_pool(additional_capacity - capacity_);
     }
@@ -139,7 +199,9 @@ void BufferPool::ThreadLocalCache::put(void* ptr, size_t size_class) {
 
     // 缓存已满，替换最老的（简单实现）
     if (CACHE_SIZE > 0) {
-        std::free(cache_[0].ptr);
+        if (cache_[0].ptr != nullptr) {
+            free(cache_[0].ptr);
+        }
         cache_[0].ptr = ptr;
         cache_[0].size_class = size_class;
     }
@@ -148,7 +210,7 @@ void BufferPool::ThreadLocalCache::put(void* ptr, size_t size_class) {
 void BufferPool::ThreadLocalCache::flush() {
     for (auto& entry : cache_) {
         if (entry.ptr != nullptr) {
-            std::free(entry.ptr);
+            free(entry.ptr);
             entry.ptr = nullptr;
         }
     }
@@ -183,6 +245,10 @@ BufferPool::BufferPool(const Config& config)
         static_cast<size_t>(SizeClass::ExtraLarge),
         config_.extra_large_pool_size
     );
+}
+
+BufferPool::BufferPool()
+    : BufferPool(Config{}) {
 }
 
 BufferPool::~BufferPool() {

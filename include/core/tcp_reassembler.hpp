@@ -7,6 +7,7 @@
 #include <vector>
 #include <memory>
 #include <optional>
+#include <functional>
 #include "buffer_view.hpp"
 
 namespace protocol_parser::core {
@@ -44,7 +45,8 @@ public:
         bool enable_fast_path = true;                // 启用快速路径（顺序包）
     };
 
-    explicit TcpReassembler(const Config& config = Config{});
+    explicit TcpReassembler(const Config& config);
+    TcpReassembler();
     ~TcpReassembler() = default;
 
     /**
@@ -150,19 +152,22 @@ public:
         uint32_t dst_ip;
         uint16_t src_port;
         uint16_t dst_port;
+        bool is_tcp = true;
 
         bool operator<(const ConnectionKey& other) const {
             if (src_ip != other.src_ip) return src_ip < other.src_ip;
             if (dst_ip != other.dst_ip) return dst_ip < other.dst_ip;
             if (src_port != other.src_port) return src_port < other.src_port;
-            return dst_port < other.dst_port;
+            if (dst_port != other.dst_port) return dst_port < other.dst_port;
+            return is_tcp < other.is_tcp;
         }
 
         bool operator==(const ConnectionKey& other) const {
             return src_ip == other.src_ip &&
                    dst_ip == other.dst_ip &&
                    src_port == other.src_port &&
-                   dst_port == other.dst_port;
+                   dst_port == other.dst_port &&
+                   is_tcp == other.is_tcp;
         }
     };
 

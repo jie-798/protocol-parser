@@ -12,6 +12,10 @@ TcpReassembler::TcpReassembler(const Config& config)
     : config_(config) {
 }
 
+TcpReassembler::TcpReassembler()
+    : TcpReassembler(Config{}) {
+}
+
 void TcpReassembler::set_initial_sequence(uint32_t seq) {
     initial_seq_ = seq;
     expected_seq_ = seq + 1;  // SYN 占用一个序列号
@@ -281,7 +285,7 @@ std::optional<BufferView> TcpStreamProcessor::process_packet(
 
     // 创建连接键
     TcpConnectionTracker::ConnectionKey key{
-        src_ip, dst_ip, src_port, dst_port
+        src_ip, dst_ip, src_port, dst_port, true  // is_tcp = true
     };
 
     // 确定方向

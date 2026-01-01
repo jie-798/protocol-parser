@@ -66,7 +66,33 @@ dist/
 .env
 
 # 系统文件
-.git/
 *.swap
 *.swp
 *.swo
+*.stackdump
+
+# Ninja构建文件
+.ninja_deps
+.ninja_log
+build.ninja
+
+# 代码覆盖率
+*.gcda
+*.gcno
+*.gcov
+coverage/
+
+# 文档和Wiki生成目录
+.qoder/
+docs/_build/
+site/
+
+# 性能分析
+*.prof
+*.profraw
+*.profdata
+
+# 临时测试文件
+test_output/
+tmp/
+temp/

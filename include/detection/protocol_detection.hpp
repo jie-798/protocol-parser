@@ -15,7 +15,7 @@
 #include <mutex>
 #include <shared_mutex>
 
-namespace ProtocolParser::Detection {
+namespace protocol_parser::detection {
 
 // 协议识别置信度
 enum class ConfidenceLevel : uint8_t {
@@ -264,6 +264,10 @@ public:
     
     [[nodiscard]] std::pair<DetectionResult, DetectionTrace> detect_with_trace(const protocol_parser::core::BufferView& buffer) const;
 
+    // 内部工具方法（需要被其他检测器访问）
+    [[nodiscard]] static ConfidenceLevel score_to_confidence_level(double score) noexcept;
+    [[nodiscard]] static std::string confidence_level_to_string(ConfidenceLevel level) noexcept;
+
 private:
     // 检测器组件
     std::unique_ptr<PortBasedDetector> port_detector_;
@@ -284,11 +288,7 @@ private:
     [[nodiscard]] DetectionResult combine_results(const std::vector<DetectionResult>& results) const noexcept;
     [[nodiscard]] double calculate_combined_confidence(const std::vector<DetectionResult>& results) const noexcept;
     [[nodiscard]] std::string select_best_protocol(const std::vector<DetectionResult>& results) const noexcept;
-    
-    // 工具方法
-    [[nodiscard]] static ConfidenceLevel score_to_confidence_level(double score) noexcept;
-    [[nodiscard]] static std::string confidence_level_to_string(ConfidenceLevel level) noexcept;
-    
+
 private:
     void update_statistics(const DetectionResult& result, std::chrono::nanoseconds detection_time) const noexcept;
     void initialize_builtin_signatures();
@@ -303,4 +303,4 @@ namespace Utils {
     [[nodiscard]] std::string buffer_to_hex_string(const protocol_parser::core::BufferView& buffer, size_t max_bytes = 32);
 }
 
-} // namespace ProtocolParser::Detection
+} // namespace protocol_parser::detection

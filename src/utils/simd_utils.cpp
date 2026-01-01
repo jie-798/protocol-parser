@@ -1,7 +1,47 @@
 #include "utils/simd_utils.hpp"
 #include <algorithm>
+#include <intrin.h>
 
 namespace protocol_parser::utils {
+
+// 跨平台位扫描函数
+namespace {
+    // 查找最低位的 1 的位置（从 0 开始）
+    inline unsigned int find_first_set(uint32_t value) {
+        if (value == 0) return 32;
+
+        #ifdef _MSC_VER
+            unsigned long index = 0;
+            _BitScanForward(&index, value);
+            return static_cast<unsigned int>(index);
+        #else
+            // GCC/Clang 内置函数
+            return static_cast<unsigned int>(__builtin_ctz(value));
+        #endif
+    }
+
+    // 对于 64 位值
+    inline unsigned int find_first_set(uint64_t value) {
+        if (value == 0) return 64;
+
+        #ifdef _MSC_VER
+            unsigned long index = 0;
+            #ifdef _WIN64
+                _BitScanForward64(&index, value);
+            #else
+                if (static_cast<uint32_t>(value) != 0) {
+                    _BitScanForward(&index, static_cast<uint32_t>(value));
+                } else {
+                    _BitScanForward(&index, static_cast<uint32_t>(value >> 32));
+                    index += 32;
+                }
+            #endif
+            return static_cast<unsigned int>(index);
+        #else
+            return static_cast<unsigned int>(__builtin_ctzll(value));
+        #endif
+    }
+}
 
 // ============================================================================
 // 静态成员初始化
@@ -191,8 +231,7 @@ size_t SIMDUtils::find_pattern_avx2(const uint8_t* data,
 
             if (mask != 0) {
                 // 找到匹配，确定具体位置
-                unsigned int index = 0;
-                _BitScanForward(&index, mask);
+                unsigned int index = find_first_set(static_cast<uint32_t>(mask));
                 return i + index;
             }
 
@@ -230,8 +269,7 @@ size_t SIMDUtils::find_pattern_avx2(const uint8_t* data,
 
             if (mask != 0) {
                 // 找到第一个字节的候选位置
-                unsigned int index = 0;
-                _BitScanForward(&index, mask);
+                unsigned int index = find_first_set(static_cast<uint32_t>(mask));
                 size_t candidate = i + index;
 
                 // 验证完整模式
@@ -289,8 +327,7 @@ size_t SIMDUtils::find_pattern_sse42(const uint8_t* data,
             int mask = _mm_movemask_epi8(cmp);
 
             if (mask != 0) {
-                unsigned int index = 0;
-                _BitScanForward(&index, mask);
+                unsigned int index = find_first_set(static_cast<uint32_t>(mask));
                 return i + index;
             }
 
@@ -322,8 +359,7 @@ size_t SIMDUtils::find_pattern_sse42(const uint8_t* data,
             int mask = _mm_movemask_epi8(cmp);
 
             if (mask != 0) {
-                unsigned int index = 0;
-                _BitScanForward(&index, mask);
+                unsigned int index = find_first_set(static_cast<uint32_t>(mask));
                 size_t candidate = i + index;
 
                 if (candidate + pattern_size <= data_size) {

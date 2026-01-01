@@ -38,8 +38,8 @@ find_package(Threads REQUIRED)
 # 核心库
 add_subdirectory(src)
 
-# 示例程序
-option(BUILD_EXAMPLES "Build example programs" ON)
+# 示例程序（已禁用）
+option(BUILD_EXAMPLES "Build example programs" OFF)
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()

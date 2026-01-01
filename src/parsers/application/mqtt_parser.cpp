@@ -1,480 +1,237 @@
 #include "parsers/application/mqtt_parser.hpp"
-#include <string>
 #include <cstring>
+#include <algorithm>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#else
-#include <arpa/inet.h>
-#endif
+namespace protocol_parser::parsers {
 
-namespace ProtocolParser::Parsers::Application {
+// ============================================================================
+// MQTTProperty 实现
+// ============================================================================
 
-MQTTParser::MQTTParser() : BaseParser() {
-    // 初始化MQTT签名模式
-    signatures_ = {
-        {0x10, 0xFF, "MQTT CONNECT"},
-        {0x20, 0xFF, "MQTT CONNACK"},
-        {0x30, 0xF0, "MQTT PUBLISH"},
-        {0x40, 0xFF, "MQTT PUBACK"},
-        {0x50, 0xFF, "MQTT PUBREC"},
-        {0x60, 0xFF, "MQTT PUBREL"},
-        {0x70, 0xFF, "MQTT PUBCOMP"},
-        {0x80, 0xFF, "MQTT SUBSCRIBE"},
-        {0x90, 0xFF, "MQTT SUBACK"},
-        {0xA0, 0xFF, "MQTT UNSUBSCRIBE"},
-        {0xB0, 0xFF, "MQTT UNSUBACK"},
-        {0xC0, 0xFF, "MQTT PINGREQ"},
-        {0xD0, 0xFF, "MQTT PINGRESP"},
-        {0xE0, 0xFF, "MQTT DISCONNECT"},
-        {0xF0, 0xFF, "MQTT AUTH"}
-    };
+std::string MQTTProperty::value_to_string() const {
+    return std::visit([](const auto& val) -> std::string {
+        using T = std::decay_t<decltype(val)>;
+        if constexpr (std::is_same_v<T, uint8_t>) {
+            return std::to_string(val);
+        } else if constexpr (std::is_same_v<T, uint16_t>) {
+            return std::to_string(val);
+        } else if constexpr (std::is_same_v<T, uint32_t>) {
+            return std::to_string(val);
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            return val;
+        } else if constexpr (std::is_same_v<T, std::vector<uint8_t>>) {
+            return "<binary>";
+        } else if constexpr (std::is_same_v<T, std::pair<std::string, std::string>>) {
+            return val.first + "=" + val.second;
+        }
+        return "<unknown>";
+    }, value);
 }
 
-ParseResult MQTTParser::parse(const ParseContext& context) {
-    const auto& buffer = context.buffer;
-    
-    if (buffer.size() < 2) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-
-    try {
-        // 解析固定头部
-        auto fixed_header_result = parse_fixed_header(buffer);
-        if (fixed_header_result.type == MQTTMessageType::RESERVED) {
-            return ParseResult::INVALID_FORMAT;
+size_t MQTTProperty::get_size() const noexcept {
+    size_t size = 1; // Property identifier
+    std::visit([&size](const auto& val) {
+        using T = std::decay_t<decltype(val)>;
+        if constexpr (std::is_same_v<T, uint8_t>) {
+            size += 1;
+        } else if constexpr (std::is_same_v<T, uint16_t>) {
+            size += 2;
+        } else if constexpr (std::is_same_v<T, uint32_t>) {
+            size += 4;
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            size += 2 + val.size();
+        } else if constexpr (std::is_same_v<T, std::vector<uint8_t>>) {
+            size += 2 + val.size();
+        } else if constexpr (std::is_same_v<T, std::pair<std::string, std::string>>) {
+            size += 2 + val.first.size() + 2 + val.second.size();
         }
-
-        // 检查数据长度是否足够
-        size_t total_length = 1 + fixed_header_result.remaining_length_size + 
-                             fixed_header_result.remaining_length;
-        if (buffer.size() < total_length) {
-            return ParseResult::INSUFFICIENT_DATA;
-        }
-
-        // 解析可变头部和载荷
-        size_t offset = 1 + fixed_header_result.remaining_length_size;
-        ProtocolParser::Core::BufferView remaining_data(
-            buffer.data() + offset, 
-            fixed_header_result.remaining_length
-        );
-
-        MQTTMessage message;
-        message.fixed_header = fixed_header_result;
-
-        switch (fixed_header_result.type) {
-            case MQTTMessageType::CONNECT:
-                return parse_connect_message(remaining_data, message);
-            case MQTTMessageType::CONNACK:
-                return parse_connack_message(remaining_data, message);
-            case MQTTMessageType::PUBLISH:
-                return parse_publish_message(remaining_data, message, fixed_header_result);
-            case MQTTMessageType::PUBACK:
-            case MQTTMessageType::PUBREC:
-            case MQTTMessageType::PUBREL:
-            case MQTTMessageType::PUBCOMP:
-                return parse_puback_message(remaining_data, message);
-            case MQTTMessageType::SUBSCRIBE:
-                return parse_subscribe_message(remaining_data, message);
-            case MQTTMessageType::SUBACK:
-                return parse_suback_message(remaining_data, message);
-            case MQTTMessageType::UNSUBSCRIBE:
-                return parse_unsubscribe_message(remaining_data, message);
-            case MQTTMessageType::UNSUBACK:
-                return parse_unsuback_message(remaining_data, message);
-            case MQTTMessageType::PINGREQ:
-            case MQTTMessageType::PINGRESP:
-                return ParseResult::SUCCESS; // 无载荷消息
-            case MQTTMessageType::DISCONNECT:
-                return parse_disconnect_message(remaining_data, message);
-            case MQTTMessageType::AUTH:
-                return parse_auth_message(remaining_data, message);
-            default:
-                return ParseResult::INVALID_FORMAT;
-        }
-
-    } catch (const std::exception&) {
-        return ParseResult::PARSING_ERROR;
-    }
+    }, value);
+    return size;
 }
 
-std::string MQTTParser::get_info() const {
-    return "MQTT Protocol Parser - Supports MQTT 3.1, 3.1.1, and 5.0";
-}
+// ============================================================================
+// MQTTFixedHeader 实现
+// ============================================================================
 
-MQTTFixedHeader MQTTParser::parse_fixed_header(const ProtocolParser::Core::BufferView& buffer) {
-    MQTTFixedHeader header;
-    
-    // 解析第一个字节
-    uint8_t first_byte = buffer[0];
-    header.type = static_cast<MQTTMessageType>((first_byte >> 4) & 0x0F);
-    header.dup = (first_byte & 0x08) != 0;
-    header.qos = static_cast<MQTTQoSLevel>((first_byte >> 1) & 0x03);
-    header.retain = (first_byte & 0x01) != 0;
-
-    // 解析剩余长度
-    size_t offset = 1;
-    header.remaining_length = 0;
-    header.remaining_length_size = 0;
-    uint32_t multiplier = 1;
-
+size_t MQTTFixedHeader::get_header_size() const noexcept {
+    size_t len = 1; // 控制包类型
+    uint32_t len_val = remaining_length;
     do {
-        if (offset >= buffer.size()) {
-            throw std::runtime_error("Insufficient data for remaining length");
-        }
-        
-        uint8_t byte = buffer[offset++];
-        header.remaining_length += (byte & 0x7F) * multiplier;
-        header.remaining_length_size++;
-        
-        if ((byte & 0x80) == 0) {
-            break;
-        }
-        
-        multiplier *= 128;
-        if (multiplier > 128 * 128 * 128) {
-            throw std::runtime_error("Malformed remaining length");
-        }
-    } while (true);
-
-    return header;
+        len++;
+        len_val >>= 7;
+    } while (len_val > 0);
+    return len;
 }
 
-ParseResult MQTTParser::parse_connect_message(const ProtocolParser::Core::BufferView& buffer, 
-                                            MQTTMessage& message) {
-    if (buffer.size() < 10) { // 最小CONNECT消息长度
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-
-    size_t offset = 0;
-    
-    // 解析协议名称长度
-    uint16_t protocol_name_length = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data() + offset));
-    offset += 2;
-    
-    if (offset + protocol_name_length > buffer.size()) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    
-    // 检查协议名称
-    std::string protocol_name(reinterpret_cast<const char*>(buffer.data() + offset), protocol_name_length);
-    offset += protocol_name_length;
-    
-    if (protocol_name != "MQTT" && protocol_name != "MQIsdp") {
-        return ParseResult::INVALID_FORMAT;
-    }
-    
-    // 解析协议版本
-    if (offset >= buffer.size()) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    uint8_t protocol_version = buffer[offset++];
-    
-    // 解析连接标志
-    if (offset >= buffer.size()) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    uint8_t connect_flags = buffer[offset++];
-    
-    // 解析Keep Alive
-    if (offset + 2 > buffer.size()) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    uint16_t keep_alive = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data() + offset));
-    offset += 2;
-    
-    // 解析客户端ID
-    if (offset + 2 > buffer.size()) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    uint16_t client_id_length = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data() + offset));
-    offset += 2;
-    
-    if (offset + client_id_length > buffer.size()) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    
-    std::string client_id(reinterpret_cast<const char*>(buffer.data() + offset), client_id_length);
-    offset += client_id_length;
-    
-    // 存储解析结果
-    message.connect_info.protocol_name = protocol_name;
-    message.connect_info.protocol_version = protocol_version;
-    message.connect_info.connect_flags = connect_flags;
-    message.connect_info.keep_alive = keep_alive;
-    message.connect_info.client_id = client_id;
-    
-    return ParseResult::SUCCESS;
+bool MQTTFixedHeader::is_valid() const noexcept {
+    return message_type != MQTTMessageType::RESERVED_0;
 }
 
-ParseResult MQTTParser::parse_connack_message(const ProtocolParser::Core::BufferView& buffer, 
-                                            MQTTMessage& message) {
-    if (buffer.size() < 2) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    
-    message.connack_info.session_present = (buffer[0] & 0x01) != 0;
-    message.connack_info.return_code = buffer[1];
-    
-    return ParseResult::SUCCESS;
-}
+// ============================================================================
+// MQTT CONNECT 消息实现
+// ============================================================================
 
-ParseResult MQTTParser::parse_publish_message(const ProtocolParser::Core::BufferView& buffer, 
-                                            MQTTMessage& message, 
-                                            const MQTTFixedHeader& header) {
-    size_t offset = 0;
-    
-    // 解析主题名称
-    auto topic_result = parse_string_field(buffer, offset, message.publish_info.topic);
-    if (topic_result != ParseResult::SUCCESS) {
-        return topic_result;
-    }
-    
-    // 如果QoS > 0，解析包ID
-    if (header.qos > MQTTQoSLevel::AT_MOST_ONCE) {
-        if (offset + 2 > buffer.size()) {
-            return ParseResult::INSUFFICIENT_DATA;
-        }
-        message.publish_info.packet_id = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data() + offset));
-        offset += 2;
-    }
-    
-    // 剩余数据为载荷
-    if (offset < buffer.size()) {
-        message.publish_info.payload.assign(
-            reinterpret_cast<const char*>(buffer.data() + offset),
-            buffer.size() - offset
-        );
-    }
-    
-    message.publish_info.qos = header.qos;
-    message.publish_info.retain = header.retain;
-    message.publish_info.dup = header.dup;
-    
-    return ParseResult::SUCCESS;
-}
-
-ParseResult MQTTParser::parse_puback_message(const ProtocolParser::Core::BufferView& buffer, 
-                                           MQTTMessage& message) {
-    if (buffer.size() < 2) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    
-    message.puback_info.packet_id = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data()));
-    
-    return ParseResult::SUCCESS;
-}
-
-ParseResult MQTTParser::parse_subscribe_message(const ProtocolParser::Core::BufferView& buffer, 
-                                              MQTTMessage& message) {
-    if (buffer.size() < 2) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    
-    size_t offset = 0;
-    
-    // 解析包ID
-    message.subscribe_info.packet_id = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data()));
-    offset += 2;
-    
-    // 解析主题过滤器列表
-    while (offset < buffer.size()) {
-        MQTTTopicFilter filter;
-        
-        // 解析主题过滤器
-        auto topic_result = parse_string_field(buffer, offset, filter.topic);
-        if (topic_result != ParseResult::SUCCESS) {
-            return topic_result;
-        }
-        
-        // 解析QoS
-        if (offset >= buffer.size()) {
-            return ParseResult::INSUFFICIENT_DATA;
-        }
-        filter.qos = static_cast<MQTTQoSLevel>(buffer[offset++]);
-        
-        message.subscribe_info.topic_filters.push_back(filter);
-    }
-    
-    return ParseResult::SUCCESS;
-}
-
-ParseResult MQTTParser::parse_suback_message(const ProtocolParser::Core::BufferView& buffer, 
-                                           MQTTMessage& message) {
-    if (buffer.size() < 2) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    
-    size_t offset = 0;
-    
-    // 解析包ID
-    message.suback_info.packet_id = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data()));
-    offset += 2;
-    
-    // 解析返回码列表
-    while (offset < buffer.size()) {
-        message.suback_info.return_codes.push_back(buffer[offset++]);
-    }
-    
-    return ParseResult::SUCCESS;
-}
-
-ParseResult MQTTParser::parse_unsubscribe_message(const ProtocolParser::Core::BufferView& buffer, 
-                                                 MQTTMessage& message) {
-    if (buffer.size() < 2) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    
-    size_t offset = 0;
-    
-    // 解析包ID
-    message.unsubscribe_info.packet_id = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data()));
-    offset += 2;
-    
-    // 解析主题过滤器列表
-    while (offset < buffer.size()) {
-        std::string topic;
-        auto topic_result = parse_string_field(buffer, offset, topic);
-        if (topic_result != ParseResult::SUCCESS) {
-            return topic_result;
-        }
-        message.unsubscribe_info.topic_filters.push_back(topic);
-    }
-    
-    return ParseResult::SUCCESS;
-}
-
-ParseResult MQTTParser::parse_unsuback_message(const ProtocolParser::Core::BufferView& buffer, 
-                                             MQTTMessage& message) {
-    if (buffer.size() < 2) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    
-    message.unsuback_info.packet_id = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data()));
-    
-    return ParseResult::SUCCESS;
-}
-
-ParseResult MQTTParser::parse_disconnect_message(const ProtocolParser::Core::BufferView& buffer, 
-                                               MQTTMessage& message) {
-    // MQTT 3.1.1 DISCONNECT消息没有载荷
-    // MQTT 5.0可能有属性，但这里简化处理
-    return ParseResult::SUCCESS;
-}
-
-ParseResult MQTTParser::parse_auth_message(const ProtocolParser::Core::BufferView& buffer, 
-                                         MQTTMessage& message) {
-    // AUTH消息是MQTT 5.0的新功能
-    // 简化实现，实际需要解析原因码和属性
-    if (buffer.size() < 1) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    
-    message.auth_info.reason_code = buffer[0];
-    
-    return ParseResult::SUCCESS;
-}
-
-ParseResult MQTTParser::parse_string_field(const ProtocolParser::Core::BufferView& buffer, 
-                                         size_t& offset, 
-                                         std::string& result) {
-    if (offset + 2 > buffer.size()) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    
-    uint16_t length = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data() + offset));
-    offset += 2;
-    
-    if (offset + length > buffer.size()) {
-        return ParseResult::INSUFFICIENT_DATA;
-    }
-    
-    result.assign(reinterpret_cast<const char*>(buffer.data() + offset), length);
-    offset += length;
-    
-    return ParseResult::SUCCESS;
-}
-
-bool MQTTParser::is_valid_topic(const std::string& topic) const {
-    if (topic.empty() || topic.length() > 65535) {
-        return false;
-    }
-    
-    // 检查非法字符
-    for (char c : topic) {
-        if (c == '\0' || c == '+' || c == '#') {
-            return false;
-        }
-    }
-    
+bool MQTTConnectMessage::validate() const noexcept {
+    if (client_id.empty()) return false;
+    if (will_flag && will_topic.empty()) return false;
+    if (will_flag && will_qos == MQTTQoS::RESERVED) return false;
     return true;
 }
 
-bool MQTTParser::is_valid_topic_filter(const std::string& filter) const {
-    if (filter.empty() || filter.length() > 65535) {
-        return false;
-    }
-    
-    // 简化的主题过滤器验证
-    // 实际应该检查通配符的正确使用
-    for (char c : filter) {
-        if (c == '\0') {
-            return false;
-        }
-    }
-    
-    return true;
+// ============================================================================
+// MQTT PUBLISH 消息实现
+// ============================================================================
+
+bool MQTTPublishMessage::validate() const noexcept {
+    return !topic.empty();
 }
 
-MQTTVersion MQTTParser::detect_version(uint8_t protocol_version) const {
-    switch (protocol_version) {
-        case 3:
-            return MQTTVersion::V3_1;
-        case 4:
-            return MQTTVersion::V3_1_1;
-        case 5:
-            return MQTTVersion::V5_0;
-        default:
-            return MQTTVersion::UNKNOWN;
-    }
+std::string MQTTPublishMessage::payload_as_string() const {
+    return std::string(payload.begin(), payload.end());
 }
 
-bool MQTTParser::validate_message(const MQTTMessage& message) const {
-    // 基本消息验证
-    switch (message.fixed_header.type) {
-        case MQTTMessageType::CONNECT:
-            return !message.connect_info.client_id.empty();
-        case MQTTMessageType::PUBLISH:
-            return is_valid_topic(message.publish_info.topic);
-        case MQTTMessageType::SUBSCRIBE:
-            for (const auto& filter : message.subscribe_info.topic_filters) {
-                if (!is_valid_topic_filter(filter.topic)) {
-                    return false;
-                }
-            }
-            return true;
-        default:
-            return true;
-    }
+// ============================================================================
+// MQTT SUBSCRIBE 消息实现
+// ============================================================================
+
+bool MQTTSubscribeMessage::validate() const noexcept {
+    return packet_id != 0 && !topic_filters.empty();
 }
 
-void MQTTParser::collect_statistics(const MQTTMessage& message) {
-    // 统计消息类型分布
-    auto type_str = mqtt_message_type_to_string(message.fixed_header.type);
-    // 这里可以与统计系统集成
-    
-    // 统计QoS分布
-    if (message.fixed_header.type == MQTTMessageType::PUBLISH) {
-        // 统计QoS级别
-    }
-    
-    // 统计主题分布
-    if (message.fixed_header.type == MQTTMessageType::PUBLISH) {
-        // 统计主题使用情况
-    }
+// ============================================================================
+// MQTT 数据包实现
+// ============================================================================
+
+bool MQTTPacket::is_valid() const noexcept {
+    return fixed_header.is_valid();
 }
 
-std::string MQTTParser::mqtt_message_type_to_string(MQTTMessageType type) const {
+size_t MQTTPacket::get_total_size() const noexcept {
+    return fixed_header.get_header_size() + fixed_header.remaining_length;
+}
+
+// ============================================================================
+// MQTTParser 实现
+// ============================================================================
+
+const ProtocolInfo& MQTTParser::get_protocol_info() const noexcept {
+    static ProtocolInfo info = {
+        "MQTT",
+        0x0C01,  // MQTT protocol type
+        2,       // Minimum header size
+        2,       // Minimum packet size
+        268435455  // Maximum packet size
+    };
+    return info;
+}
+
+bool MQTTParser::can_parse(const BufferView& buffer) const noexcept {
+    if (buffer.size() < 2) return false;
+
+    // 检查MQTT控制包类型 (upper 4 bits)
+    uint8_t first_byte = buffer[0];
+    uint8_t msg_type = (first_byte >> 4) & 0x0F;
+
+    return msg_type >= 1 && msg_type <= 15;
+}
+
+ParseResult MQTTParser::parse(ParseContext& context) noexcept {
+    reset();
+
+    const auto buffer = context.buffer;
+    const auto data = buffer.data();
+    const auto size = buffer.size();
+
+    if (size < 2) {
+        return ParseResult::NeedMoreData;
+    }
+
+    // 解析固定头部
+    size_t offset = 0;
+    auto result = parse_fixed_header(data, size, offset);
+    if (result != ParseResult::Success) {
+        return result;
+    }
+
+    // 解析可变头部
+    result = parse_variable_header(data, size, offset);
+    if (result != ParseResult::Success) {
+        return result;
+    }
+
+    // 解析载荷
+    result = parse_payload(data, size, offset);
+    if (result != ParseResult::Success) {
+        return result;
+    }
+
+    parsed_successfully_ = true;
+    update_statistics(mqtt_packet_);
+    perform_security_analysis();
+
+    return ParseResult::Success;
+}
+
+void MQTTParser::reset() noexcept {
+    mqtt_packet_ = MQTTPacket{};
+    parsed_successfully_ = false;
+    is_malformed_ = false;
+}
+
+std::string MQTTParser::get_protocol_name() const noexcept {
+    return "MQTT";
+}
+
+uint16_t MQTTParser::get_default_port() const noexcept {
+    return MQTT_DEFAULT_PORT;
+}
+
+std::vector<uint16_t> MQTTParser::get_supported_ports() const noexcept {
+    return {MQTT_DEFAULT_PORT, MQTT_TLS_PORT, MQTT_WS_PORT, MQTT_WSS_PORT};
+}
+
+const MQTTPacket& MQTTParser::get_mqtt_packet() const noexcept {
+    return mqtt_packet_;
+}
+
+bool MQTTParser::is_mqtt_packet() const noexcept {
+    return parsed_successfully_;
+}
+
+bool MQTTParser::validate_packet() const noexcept {
+    return mqtt_packet_.is_valid();
+}
+
+bool MQTTParser::is_malformed() const noexcept {
+    return is_malformed_;
+}
+
+MQTTParser::MQTTAnalysis MQTTParser::analyze_packet() const noexcept {
+    MQTTAnalysis analysis;
+    analysis.detected_version = MQTTVersion::MQTT_3_1_1;
+
+    if (mqtt_packet_.fixed_header.message_type == MQTTMessageType::CONNECT) {
+        analysis.is_client_message = true;
+        analysis.has_security_issues = !mqtt_packet_.message.index();
+    } else if (mqtt_packet_.fixed_header.message_type == MQTTMessageType::CONNACK) {
+        analysis.is_server_message = true;
+    } else if (mqtt_packet_.fixed_header.message_type == MQTTMessageType::PUBLISH) {
+        analysis.is_data_message = true;
+        analysis.has_payload = true;
+    }
+
+    return analysis;
+}
+
+const MQTTParser::MQTTStatistics& MQTTParser::get_statistics() const noexcept {
+    return statistics_;
+}
+
+void MQTTParser::reset_statistics() noexcept {
+    statistics_ = MQTTStatistics{};
+}
+
+std::string MQTTParser::message_type_to_string(MQTTMessageType type) noexcept {
     switch (type) {
         case MQTTMessageType::CONNECT: return "CONNECT";
         case MQTTMessageType::CONNACK: return "CONNACK";
@@ -495,4 +252,306 @@ std::string MQTTParser::mqtt_message_type_to_string(MQTTMessageType type) const 
     }
 }
 
-} // namespace ProtocolParser::Parsers::Application
+std::string MQTTParser::version_to_string(MQTTVersion version) noexcept {
+    switch (version) {
+        case MQTTVersion::MQTT_3_1: return "MQTT 3.1";
+        case MQTTVersion::MQTT_3_1_1: return "MQTT 3.1.1";
+        case MQTTVersion::MQTT_5_0: return "MQTT 5.0";
+        default: return "UNKNOWN";
+    }
+}
+
+std::string MQTTParser::qos_to_string(MQTTQoS qos) noexcept {
+    switch (qos) {
+        case MQTTQoS::AT_MOST_ONCE: return "QoS 0";
+        case MQTTQoS::AT_LEAST_ONCE: return "QoS 1";
+        case MQTTQoS::EXACTLY_ONCE: return "QoS 2";
+        default: return "RESERVED";
+    }
+}
+
+std::string MQTTParser::return_code_to_string(MQTTConnectReturnCode code) noexcept {
+    switch (code) {
+        case MQTTConnectReturnCode::CONNECTION_ACCEPTED: return "Accepted";
+        case MQTTConnectReturnCode::UNACCEPTABLE_PROTOCOL_VERSION: return "Unacceptable Protocol Version";
+        case MQTTConnectReturnCode::IDENTIFIER_REJECTED: return "Identifier Rejected";
+        case MQTTConnectReturnCode::SERVER_UNAVAILABLE: return "Server Unavailable";
+        case MQTTConnectReturnCode::BAD_USERNAME_OR_PASSWORD: return "Bad Username or Password";
+        case MQTTConnectReturnCode::NOT_AUTHORIZED: return "Not Authorized";
+        default: return "UNKNOWN";
+    }
+}
+
+bool MQTTParser::is_valid_topic(const std::string& topic) noexcept {
+    if (topic.empty() || topic.size() > MAX_TOPIC_LENGTH) {
+        return false;
+    }
+
+    // 检查通配符
+    if (topic.find('+') != std::string::npos || topic.find('#') != std::string::npos) {
+        return false;
+    }
+
+    return true;
+}
+
+bool MQTTParser::is_wildcard_topic(const std::string& topic) noexcept {
+    return topic.find('+') != std::string::npos || topic.find('#') != std::string::npos;
+}
+
+// ============================================================================
+// 私有方法实现
+// ============================================================================
+
+ParseResult MQTTParser::parse_fixed_header(const uint8_t* data, size_t size, size_t& offset) noexcept {
+    if (offset >= size) return ParseResult::NeedMoreData;
+
+    uint8_t first_byte = data[offset++];
+    mqtt_packet_.fixed_header.message_type = static_cast<MQTTMessageType>((first_byte >> 4) & 0x0F);
+    mqtt_packet_.fixed_header.dup_flag = (first_byte & 0x08) != 0;
+    mqtt_packet_.fixed_header.qos_level = static_cast<MQTTQoS>((first_byte >> 1) & 0x03);
+    mqtt_packet_.fixed_header.retain_flag = (first_byte & 0x01) != 0;
+
+    // 解析剩余长度
+    mqtt_packet_.fixed_header.remaining_length = decode_remaining_length(data, size, offset);
+    if (offset + mqtt_packet_.fixed_header.remaining_length > size) {
+        return ParseResult::NeedMoreData;
+    }
+
+    return ParseResult::Success;
+}
+
+ParseResult MQTTParser::parse_variable_header(const uint8_t* data, size_t size, size_t& offset) noexcept {
+    // 根据消息类型解析可变头部
+    switch (mqtt_packet_.fixed_header.message_type) {
+        case MQTTMessageType::CONNECT:
+            return parse_connect_message(data, size, offset);
+        case MQTTMessageType::CONNACK:
+            return parse_connack_message(data, size, offset);
+        case MQTTMessageType::PUBLISH:
+            return parse_publish_message(data, size, offset);
+        case MQTTMessageType::SUBSCRIBE:
+            return parse_subscribe_message(data, size, offset);
+        default:
+            // 其他消息类型暂时跳过
+            return ParseResult::Success;
+    }
+}
+
+ParseResult MQTTParser::parse_payload(const uint8_t* data, size_t size, size_t& offset) noexcept {
+    // 载荷解析在具体的消息处理中完成
+    return ParseResult::Success;
+}
+
+ParseResult MQTTParser::parse_connect_message(const uint8_t* data, size_t size, size_t& offset) noexcept {
+    MQTTConnectMessage connect_msg;
+
+    // 协议名称
+    connect_msg.protocol_name = read_utf8_string(data, size, offset);
+    if (offset > size) return ParseResult::InvalidFormat;
+
+    // 协议版本
+    if (offset >= size) return ParseResult::NeedMoreData;
+    connect_msg.protocol_version = static_cast<MQTTVersion>(data[offset++]);
+
+    // 连接标志
+    if (offset >= size) return ParseResult::NeedMoreData;
+    uint8_t flags = data[offset++];
+    connect_msg.clean_session = (flags & 0x02) != 0;
+    connect_msg.will_flag = (flags & 0x04) != 0;
+    connect_msg.will_qos = static_cast<MQTTQoS>((flags >> 3) & 0x03);
+    connect_msg.will_retain = (flags & 0x20) != 0;
+    connect_msg.password_flag = (flags & 0x40) != 0;
+    connect_msg.username_flag = (flags & 0x80) != 0;
+
+    // 保活
+    if (offset + 2 > size) return ParseResult::NeedMoreData;
+    connect_msg.keep_alive = (static_cast<uint16_t>(data[offset]) << 8) | data[offset + 1];
+    offset += 2;
+
+    // Client ID
+    connect_msg.client_id = read_utf8_string(data, size, offset);
+
+    // Will Topic 和 Will Message
+    if (connect_msg.will_flag) {
+        connect_msg.will_topic = read_utf8_string(data, size, offset);
+        connect_msg.will_message = read_utf8_string(data, size, offset);
+    }
+
+    // Username 和 Password
+    if (connect_msg.username_flag) {
+        connect_msg.username = read_utf8_string(data, size, offset);
+    }
+    if (connect_msg.password_flag) {
+        connect_msg.password = read_utf8_string(data, size, offset);
+    }
+
+    mqtt_packet_.message = connect_msg;
+    return ParseResult::Success;
+}
+
+ParseResult MQTTParser::parse_connack_message(const uint8_t* data, size_t size, size_t& offset) noexcept {
+    if (offset + 2 > size) return ParseResult::NeedMoreData;
+
+    MQTTConnackMessage connack;
+    connack.session_present = (data[offset++] & 0x01) != 0;
+    connack.return_code = static_cast<MQTTConnectReturnCode>(data[offset++]);
+
+    mqtt_packet_.message = connack;
+    return ParseResult::Success;
+}
+
+ParseResult MQTTParser::parse_publish_message(const uint8_t* data, size_t size, size_t& offset) noexcept {
+    MQTTPublishMessage pub_msg;
+
+    // Topic
+    pub_msg.topic = read_utf8_string(data, size, offset);
+    if (pub_msg.topic.empty()) return ParseResult::InvalidFormat;
+
+    // Packet ID (if QoS > 0)
+    if (mqtt_packet_.fixed_header.qos_level != MQTTQoS::AT_MOST_ONCE) {
+        if (offset + 2 > size) return ParseResult::NeedMoreData;
+        pub_msg.packet_id = (static_cast<uint16_t>(data[offset]) << 8) | data[offset + 1];
+        offset += 2;
+    }
+
+    // Payload
+    size_t payload_size = mqtt_packet_.fixed_header.remaining_length - (offset - 2); // Adjust for header
+    if (offset + payload_size <= size) {
+        pub_msg.payload.assign(data + offset, data + offset + payload_size);
+        offset += payload_size;
+    }
+
+    mqtt_packet_.message = pub_msg;
+    return ParseResult::Success;
+}
+
+ParseResult MQTTParser::parse_subscribe_message(const uint8_t* data, size_t size, size_t& offset) noexcept {
+    MQTTSubscribeMessage sub_msg;
+
+    // Packet ID
+    if (offset + 2 > size) return ParseResult::NeedMoreData;
+    sub_msg.packet_id = (static_cast<uint16_t>(data[offset]) << 8) | data[offset + 1];
+    offset += 2;
+
+    // Topics (简化：只读取第一个)
+    while (offset + 2 <= size) {
+        std::string topic = read_utf8_string(data, size, offset);
+        if (topic.empty()) break;
+
+        MQTTSubscribeMessage::TopicFilter filter;
+        filter.topic = topic;
+
+        if (offset < size) {
+            uint8_t options = data[offset++];
+            filter.max_qos = static_cast<MQTTQoS>(options & 0x03);
+        }
+
+        sub_msg.topic_filters.push_back(filter);
+    }
+
+    mqtt_packet_.message = sub_msg;
+    return ParseResult::Success;
+}
+
+uint32_t MQTTParser::decode_remaining_length(const uint8_t* data, size_t size, size_t& offset) noexcept {
+    uint32_t value = 0;
+    uint8_t multiplier = 1;
+    size_t index = offset;
+
+    while (index < size) {
+        uint8_t encoded_byte = data[index++];
+        value += (encoded_byte & 0x7F) * multiplier;
+
+        if ((encoded_byte & 0x80) == 0) {
+            offset = index;
+            return value;
+        }
+
+        multiplier *= 0x80;
+        if (multiplier > 0x08000000) {
+            offset = index;
+            return value; // Invalid, but return what we have
+        }
+    }
+
+    offset = index;
+    return value;
+}
+
+std::string MQTTParser::read_utf8_string(const uint8_t* data, size_t size, size_t& offset) noexcept {
+    if (offset + 2 > size) {
+        offset = size;
+        return "";
+    }
+
+    uint16_t len = (static_cast<uint16_t>(data[offset]) << 8) | data[offset + 1];
+    offset += 2;
+
+    if (offset + len > size) {
+        offset = size;
+        return "";
+    }
+
+    std::string result(reinterpret_cast<const char*>(data + offset), len);
+    offset += len;
+    return result;
+}
+
+ParseResult MQTTParser::parse_properties(const uint8_t* data, size_t size, size_t& offset,
+                                        std::vector<MQTTProperty>& properties) noexcept {
+    // 简化实现：跳过属性解析
+    (void)data;
+    (void)size;
+    (void)offset;
+    (void)properties;
+    return ParseResult::Success;
+}
+
+bool MQTTParser::validate_fixed_header() const noexcept {
+    return mqtt_packet_.fixed_header.is_valid();
+}
+
+bool MQTTParser::validate_topic_name(const std::string& topic) const noexcept {
+    return is_valid_topic(topic);
+}
+
+bool MQTTParser::validate_client_id(const std::string& client_id) const noexcept {
+    return !client_id.empty() && client_id.size() <= MAX_CLIENT_ID_LENGTH;
+}
+
+void MQTTParser::perform_security_analysis() noexcept {
+    // 简化实现
+}
+
+void MQTTParser::update_statistics(const MQTTPacket& packet) noexcept {
+    statistics_.total_packets++;
+
+    switch (packet.fixed_header.message_type) {
+        case MQTTMessageType::CONNECT:
+            statistics_.connect_count++;
+            break;
+        case MQTTMessageType::CONNACK:
+            statistics_.connack_count++;
+            break;
+        case MQTTMessageType::PUBLISH:
+            statistics_.publish_count++;
+            break;
+        case MQTTMessageType::SUBSCRIBE:
+            statistics_.subscribe_count++;
+            break;
+        case MQTTMessageType::PINGREQ:
+            statistics_.pingreq_count++;
+            break;
+        case MQTTMessageType::PINGRESP:
+            statistics_.pingresp_count++;
+            break;
+        case MQTTMessageType::DISCONNECT:
+            statistics_.disconnect_count++;
+            break;
+        default:
+            break;
+    }
+}
+
+} // namespace protocol_parser::parsers

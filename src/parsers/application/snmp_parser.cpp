@@ -2,9 +2,20 @@
 #include <cstring>
 #include <algorithm>
 #include <sstream>
-#include <arpa/inet.h>
+#include <iomanip>
 
-namespace ProtocolParser::Parsers::Application {
+#ifdef _WIN32
+#include <winsock2.h>
+// Windows宏与枚举值冲突，临时取消定义
+#pragma push_macro("max")
+#pragma push_macro("min")
+#pragma push_macro("NO_ERROR")
+#undef max
+#undef min
+#undef NO_ERROR
+#endif
+
+namespace protocol_parser::parsers {
 
 // OID 类实现
 OID::OID(const std::vector<uint32_t>& components) : components_(components) {}
@@ -129,46 +140,73 @@ const SNMPPDU& SNMPMessage::get_pdu() const noexcept {
 }
 
 // SNMPParser 方法实现
-ParseResult SNMPParser::parse(const BufferView& buffer) noexcept {
+
+const ProtocolInfo& SNMPParser::get_protocol_info() const noexcept {
+    static ProtocolInfo info = {
+        "SNMP",           // name
+        0x0801,          // type (SNMP)
+        4,                // header_size (approximate)
+        10,               // min_packet_size
+        65507             // max_packet_size
+    };
+    return info;
+}
+
+bool SNMPParser::can_parse(const BufferView& buffer) const noexcept {
+    const auto data = buffer.data();
+    const auto size = buffer.size();
+
+    // 检查最小大小
+    if (size < 10) return false;
+
+    // 检查BER SEQUENCE标记 (0x30)
+    if (data[0] != 0x30) return false;
+
+    // 验证BER编码
+    return true;
+}
+
+ParseResult SNMPParser::parse(ParseContext& context) noexcept {
     reset();
-    
+
+    const auto buffer = context.buffer;
+    const auto data = buffer.data();
+    const auto size = buffer.size();
+
     try {
-        const auto data = buffer.data();
-        const auto size = buffer.size();
-        
         if (size < 10) {  // 最小SNMP消息大小
             is_malformed_ = true;
-            return ParseResult::INSUFFICIENT_DATA;
+            return ParseResult::NeedMoreData;
         }
-        
+
         if (size > MAX_MESSAGE_SIZE) {
             is_malformed_ = true;
-            return ParseResult::MESSAGE_TOO_LARGE;
+            return ParseResult::BufferTooSmall;
         }
-        
+
         size_t offset = 0;
-        
+
         // 验证BER编码
         if (!validate_ber_encoding(data, size)) {
             is_malformed_ = true;
-            return ParseResult::INVALID_FORMAT;
+            return ParseResult::InvalidFormat;
         }
-        
+
         // 解析顶层序列
         if (!parse_ber_sequence(data, size, offset)) {
             is_malformed_ = true;
-            return ParseResult::INVALID_FORMAT;
+            return ParseResult::InvalidFormat;
         }
-        
+
         // 解析版本
         int64_t version_val;
         if (!parse_ber_integer(data, size, offset, version_val)) {
             is_malformed_ = true;
-            return ParseResult::INVALID_FORMAT;
+            return ParseResult::InvalidFormat;
         }
-        
+
         snmp_message_.version = static_cast<SNMPVersion>(version_val);
-        
+
         // 根据版本解析剩余部分
         bool parse_success = false;
         switch (snmp_message_.version) {
@@ -181,30 +219,30 @@ ParseResult SNMPParser::parse(const BufferView& buffer) noexcept {
                 break;
             default:
                 is_malformed_ = true;
-                return ParseResult::UNSUPPORTED_VERSION;
+                return ParseResult::UnsupportedVersion;
         }
-        
+
         if (!parse_success) {
             is_malformed_ = true;
-            return ParseResult::INVALID_FORMAT;
+            return ParseResult::InvalidFormat;
         }
-        
+
         // 验证消息
         if (!validate_message()) {
             is_malformed_ = true;
-            return ParseResult::INVALID_FORMAT;
+            return ParseResult::InvalidFormat;
         }
-        
+
         parsed_successfully_ = true;
         update_statistics(snmp_message_);
         perform_security_analysis();
-        
-        return ParseResult::SUCCESS;
-        
+
+        return ParseResult::Success;
+
     } catch (const std::exception&) {
         reset();
         is_malformed_ = true;
-        return ParseResult::PARSING_ERROR;
+        return ParseResult::InternalError;
     }
 }
 
@@ -537,4 +575,4 @@ void SNMPParser::initialize_standard_mibs() noexcept {
     // 初始化标准MIB
 }
 
-} // namespace ProtocolParser::Parsers::Application
+} // namespace protocol_parser::parsers

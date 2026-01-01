@@ -38,9 +38,13 @@ public:
         size_t extra_large_pool_size = 64;  // 超大缓冲区数量
         bool enable_auto_expand = true;     // 允许自动扩容
         bool enable_thread_cache = true;    // 启用线程本地缓存
+
+        // 默认构造函数
+        Config() = default;
     };
 
-    explicit BufferPool(const Config& config = Config{});
+    explicit BufferPool(const Config& config);
+    BufferPool();
     ~BufferPool();
 
     // 禁止拷贝和移动
@@ -115,18 +119,20 @@ private:
 
     private:
         struct Block {
-            void* data;
-            std::atomic<bool> in_use;
+            void* data = nullptr;
+            mutable std::atomic<bool> in_use{false};  // mutable 允许在 const 上下文中修改
         };
 
-        std::vector<Block> blocks_;
+        // 使用原始数组指针，避免 std::atomic 的移动问题
+        Block* blocks_ = nullptr;
         size_t buffer_size_;
         size_t capacity_;
-        std::atomic<size_t> size_;
+        size_t size_ = 0;
         std::mutex mutex_;
 
         [[nodiscard]] size_t find_free_block();
         void expand_pool(size_t additional_blocks);
+        void cleanup_blocks();
     };
 
     // 线程本地缓存
@@ -181,15 +187,8 @@ public:
         other.buffer_ = BufferView{};
     }
 
-    ScopedBuffer& operator=(ScopedBuffer&& other) noexcept {
-        if (this != &other) {
-            pool_.release(buffer_);
-            pool_ = other.pool_;
-            buffer_ = other.buffer_;
-            other.buffer_ = BufferView{};
-        }
-        return *this;
-    }
+    // 禁止移动赋值（引用成员无法重新赋值）
+    ScopedBuffer& operator=(ScopedBuffer&& other) = delete;
 
     [[nodiscard]] const BufferView& get() const noexcept { return buffer_; }
     [[nodiscard]] BufferView& get() noexcept { return buffer_; }

@@ -263,7 +263,6 @@ private:
     bool detect_replay_attack(const DNP3Info& info) const;
     bool detect_dos_attack(const DNP3Info& info) const;
     bool detect_scan_attempt(const DNP3Info& info) const;
-    bool detect_attack_patterns(const DNP3Info& info) const;
     bool analyze_authentication(const DNP3Info& info) const;
     
     // 异常检测方法

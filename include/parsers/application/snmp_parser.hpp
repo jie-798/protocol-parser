@@ -1,6 +1,7 @@
 #pragma once
 
 #include "parsers/base_parser.hpp"
+#include "../base_parser.hpp"
 #include <vector>
 #include <string>
 #include <optional>
@@ -8,7 +9,7 @@
 #include <unordered_map>
 #include <memory>
 
-namespace ProtocolParser::Parsers::Application {
+namespace protocol_parser::parsers {
 
 // SNMP版本定义
 enum class SNMPVersion : uint32_t {
@@ -204,13 +205,15 @@ public:
     ~SNMPParser() override = default;
 
     // 基类接口实现
-    [[nodiscard]] ParseResult parse(const BufferView& buffer) noexcept override;
-    [[nodiscard]] std::string get_protocol_name() const noexcept override;
-    [[nodiscard]] uint16_t get_default_port() const noexcept override;
-    [[nodiscard]] std::vector<uint16_t> get_supported_ports() const noexcept override;
+    [[nodiscard]] const ProtocolInfo& get_protocol_info() const noexcept override;
+    [[nodiscard]] bool can_parse(const BufferView& buffer) const noexcept override;
+    [[nodiscard]] ParseResult parse(ParseContext& context) noexcept override;
     void reset() noexcept override;
 
     // SNMP特定接口
+    [[nodiscard]] std::string get_protocol_name() const noexcept;
+    [[nodiscard]] uint16_t get_default_port() const noexcept;
+    [[nodiscard]] std::vector<uint16_t> get_supported_ports() const noexcept;
     [[nodiscard]] const SNMPMessage& get_snmp_message() const noexcept;
     [[nodiscard]] bool is_snmp_packet() const noexcept;
     
@@ -327,4 +330,4 @@ private:
     static constexpr uint16_t SNMP_TRAP_PORT = 162;      // SNMP Trap端口
 };
 
-} // namespace ProtocolParser::Parsers::Application
+} // namespace protocol_parser::parsers

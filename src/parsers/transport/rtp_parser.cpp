@@ -54,7 +54,7 @@ bool RtpParser::is_rtp_packet(const BufferView& buffer) noexcept {
     // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     // |                           timestamp                       |
     // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    * |           synchronization source (SSRC) identifier       |
+    // |           synchronization source (SSRC) identifier       |
     // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
     if (buffer.size() < 12) {
