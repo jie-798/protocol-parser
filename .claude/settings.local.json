@@ -3,7 +3,8 @@
     "allow": [
       "Bash(mingw32-make:*)",
       "Bash(cmake:*)",
-      "Bash(ninja:*)"
+      "Bash(ninja:*)",
+      "Bash(mkdir:*)"
     ]
   }
 }

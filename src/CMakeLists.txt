@@ -43,7 +43,8 @@ file(GLOB_RECURSE PARSER_SOURCES
     "parsers/transport/udp_parser.cpp"
     "parsers/transport/sctp_parser.cpp"
     # "parsers/security/*.cpp"  # 暂时排除
-    "parsers/industrial/*.cpp"  # 重新启用工业协议解析器
+    "parsers/industrial/*.cpp"  # 工业协议解析器
+    "parsers/signaling/*.cpp"  # 信令协议解析器 (GTPv2, Diameter, S1AP, etc.)
 )
 
 # 检测和AI组件
