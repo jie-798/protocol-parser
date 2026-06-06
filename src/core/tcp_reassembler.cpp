@@ -1,8 +1,23 @@
 #include "core/tcp_reassembler.hpp"
 #include <algorithm>
 #include <iterator>
+#include <limits>
 
 namespace protocol_parser::core {
+
+namespace {
+bool fits_sequence_space(size_t size) noexcept {
+    return size <= std::numeric_limits<uint32_t>::max();
+}
+
+uint32_t advance_sequence(uint32_t seq, size_t size) noexcept {
+    return seq + static_cast<uint32_t>(size);
+}
+
+uint32_t data_end_sequence(const TcpSegment& segment) noexcept {
+    return advance_sequence(segment.seq, segment.data.size());
+}
+}
 
 // ============================================================================
 // TcpReassembler 实现
@@ -33,13 +48,16 @@ bool TcpReassembler::fast_path_add_segment(const TcpSegment& segment) {
         return false;
     }
 
-    // 直接追加到已组装数据
-    size_t old_size = assembled_data_.size();
+    if (!fits_sequence_space(segment.data.size()) ||
+        assembled_data_.size() + segment.data.size() > config_.max_buffer_size) {
+        return false;
+    }
+
     assembled_data_.insert(assembled_data_.end(),
                           segment.data.data(),
                           segment.data.data() + segment.data.size());
 
-    expected_seq_ += segment.data.size();
+    expected_seq_ = advance_sequence(expected_seq_, segment.data.size());
 
     // 处理 SYN/FIN
     if (segment.has_syn) {
@@ -47,7 +65,7 @@ bool TcpReassembler::fast_path_add_segment(const TcpSegment& segment) {
     }
     if (segment.has_fin) {
         has_fin_ = true;
-        fin_seq_ = segment.seq + segment.data.size() + 1;
+        fin_seq_ = advance_sequence(data_end_sequence(segment), 1);
     }
 
     stats_.total_segments++;
@@ -57,54 +75,62 @@ bool TcpReassembler::fast_path_add_segment(const TcpSegment& segment) {
 bool TcpReassembler::add_segment(const TcpSegment& segment) {
     // 尝试快速路径
     if (fast_path_add_segment(segment)) {
+        fill_gaps();
         return true;
     }
 
-    // 慢速路径：处理乱序包
-
-    // 检查缓冲区大小限制
-    if (segments_.size() >= config_.max_out_of_order) {
-        return false;  // 丢弃
-    }
-
-    // 计算实际序列号（相对序列号）
-    uint32_t rel_seq = segment.seq;
-    if (has_initial_seq_) {
-        rel_seq = segment.seq - initial_seq_;
-    }
-
-    // 检查是否是旧数据（已消费的序列号）
-    uint32_t seq_end = segment.seq + segment.data.size();
-    if (seq_end <= expected_seq_) {
-        // 这是一个旧包或重传
-        stats_.retransmitted_bytes += segment.data.size();
+    if (!fits_sequence_space(segment.data.size()) || segments_.size() >= config_.max_out_of_order) {
         return false;
     }
 
-    // 插入片段
-    auto [it, inserted] = segments_.emplace(segment.seq, segment);
+    size_t buffered_bytes = assembled_data_.size() - consumed_bytes_;
+    for (const auto& [seq, buffered_segment] : segments_) {
+        (void)seq;
+        buffered_bytes += buffered_segment.data.size();
+    }
+    if (segment.data.size() > config_.max_buffer_size ||
+        buffered_bytes > config_.max_buffer_size - segment.data.size()) {
+        return false;
+    }
+
+    TcpSegment normalized = segment;
+    const uint32_t seq_end = data_end_sequence(normalized);
+    if (seq_end <= expected_seq_) {
+        stats_.retransmitted_bytes += normalized.data.size();
+        return false;
+    }
+
+    if (normalized.seq < expected_seq_) {
+        const size_t overlap = expected_seq_ - normalized.seq;
+        stats_.retransmitted_bytes += overlap;
+        normalized.seq = expected_seq_;
+        normalized.data = normalized.data.substr(overlap);
+    }
+
+    const size_t available_before = assembled_data_.size() - consumed_bytes_;
+    auto [it, inserted] = segments_.emplace(normalized.seq, normalized);
     if (!inserted) {
-        // 序列号冲突，合并数据
-        // TODO: 处理重叠
+        if (data_end_sequence(normalized) > data_end_sequence(it->second)) {
+            it->second = normalized;
+        } else {
+            stats_.retransmitted_bytes += normalized.data.size();
+        }
     }
 
     stats_.total_segments++;
-    if (segment.seq != expected_seq_) {
+    if (normalized.seq != expected_seq_) {
         stats_.out_of_order_segments++;
     }
 
-    // 处理 FIN
     if (segment.has_fin) {
         has_fin_ = true;
-        fin_seq_ = segment.seq + segment.data.size() + 1;
+        fin_seq_ = advance_sequence(data_end_sequence(segment), 1);
     }
 
-    // 尝试合并和重组
     merge_overlapping_segments();
     fill_gaps();
 
-    return !assembled_data_.empty() ||
-           assembled_data_.size() > (consumed_bytes_ + consumed_bytes_);
+    return assembled_data_.size() - consumed_bytes_ > available_before;
 }
 
 void TcpReassembler::merge_overlapping_segments() {
@@ -114,31 +140,18 @@ void TcpReassembler::merge_overlapping_segments() {
 
     auto it = segments_.begin();
     auto current = it++;
-    uint32_t current_end = current->second.seq + current->second.data.size();
+    uint32_t current_end = data_end_sequence(current->second);
 
     while (it != segments_.end()) {
-        uint32_t next_seq = it->second.seq;
-        uint32_t next_end = next_seq + it->second.data.size();
+        const uint32_t next_seq = it->second.seq;
+        const uint32_t next_end = data_end_sequence(it->second);
 
-        // 检查重叠
-        if (next_seq <= current_end) {
-            // 有重叠，合并
-            if (next_end > current_end) {
-                // 扩展当前片段
-                size_t overlap_size = current_end - next_seq;
-                size_t new_data_size = next_end - current_end;
-
-                // TODO: 合并数据到 current
-                stats_.merged_overlaps++;
-                current_end = next_end;
-            }
-
-            // 删除下一个片段（已合并）
+        if (next_seq < current_end && next_end <= current_end) {
+            stats_.merged_overlaps++;
             it = segments_.erase(it);
         } else {
-            // 无重叠，移动到下一个
             current = it;
-            current_end = current->second.seq + current->second.data.size();
+            current_end = next_end;
             ++it;
         }
     }
@@ -153,25 +166,30 @@ void TcpReassembler::fill_gaps() {
     auto it = segments_.begin();
 
     while (it != segments_.end()) {
-        if (it->second.seq == expected_seq_) {
-            // 找到期望的片段，添加到已组装数据
-            size_t old_size = assembled_data_.size();
-            assembled_data_.insert(assembled_data_.end(),
-                                  it->second.data.data(),
-                                  it->second.data.data() + it->second.data.size());
-
-            expected_seq_ += it->second.data.size();
-
-            if (it->second.has_syn) {
-                expected_seq_++;
-            }
-
-            // 移除已处理的片段
+        const uint32_t segment_end = data_end_sequence(it->second);
+        if (segment_end <= expected_seq_) {
+            stats_.retransmitted_bytes += it->second.data.size();
             it = segments_.erase(it);
-        } else {
-            // 有间隙，无法继续
+            continue;
+        }
+
+        if (it->second.seq > expected_seq_) {
             break;
         }
+
+        const size_t offset = expected_seq_ - it->second.seq;
+        auto payload = it->second.data.substr(offset);
+        assembled_data_.insert(assembled_data_.end(),
+                              payload.data(),
+                              payload.data() + payload.size());
+
+        expected_seq_ = advance_sequence(expected_seq_, payload.size());
+
+        if (it->second.has_syn) {
+            expected_seq_++;
+        }
+
+        it = segments_.erase(it);
     }
 
     // 检查 FIN
@@ -208,11 +226,14 @@ TcpReassembler::WindowInfo TcpReassembler::get_window_info() const {
     info.highest_seq = expected_seq_;
     info.buffered_bytes = assembled_data_.size() - consumed_bytes_;
     info.available_bytes = info.buffered_bytes;
-    info.gap_count = segments_.size();
+    info.gap_count = segments_.size() > std::numeric_limits<uint32_t>::max()
+        ? std::numeric_limits<uint32_t>::max()
+        : static_cast<uint32_t>(segments_.size());
 
     // 计算最高序列号
     for (const auto& [seq, segment] : segments_) {
-        uint32_t seg_end = seq + segment.data.size();
+        (void)seq;
+        uint32_t seg_end = data_end_sequence(segment);
         if (seg_end > info.highest_seq) {
             info.highest_seq = seg_end;
         }

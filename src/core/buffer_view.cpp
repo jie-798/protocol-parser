@@ -1,22 +1,44 @@
 #include "core/buffer_view.hpp"
 #include <algorithm>
-#include <stdexcept>
-#include <sstream>
 #include <iomanip>
+#include <sstream>
+#include <stdexcept>
 
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+#define PROTOCOL_PARSER_X86 1
+#else
+#define PROTOCOL_PARSER_X86 0
+#endif
+
+#if PROTOCOL_PARSER_X86
+#include <immintrin.h>
 #ifdef _MSC_VER
 #include <intrin.h>
 #else
 #include <cpuid.h>
 #endif
+#endif
+
+#if defined(__AVX2__)
+#define PROTOCOL_PARSER_HAS_AVX2_INTRINSICS 1
+#else
+#define PROTOCOL_PARSER_HAS_AVX2_INTRINSICS 0
+#endif
+
+#if defined(__SSE2__) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+#define PROTOCOL_PARSER_HAS_SSE2_INTRINSICS 1
+#else
+#define PROTOCOL_PARSER_HAS_SSE2_INTRINSICS 0
+#endif
 
 namespace protocol_parser::core {
 
 // CPU特性检测
-static bool has_avx2() {
+[[maybe_unused]] static bool has_avx2() {
+#if PROTOCOL_PARSER_X86
 #ifdef _MSC_VER
-    int cpui[4];
-    __cpuid(cpui, 7);
+    int cpui[4]{};
+    __cpuidex(cpui, 7, 0);
     return (cpui[1] & (1 << 5)) != 0;
 #else
     unsigned int eax, ebx, ecx, edx;
@@ -25,11 +47,17 @@ static bool has_avx2() {
     }
     return false;
 #endif
+#else
+    return false;
+#endif
 }
 
-static bool has_sse2() {
-#ifdef _MSC_VER
-    int cpui[4];
+[[maybe_unused]] static bool has_sse2() {
+#if PROTOCOL_PARSER_X86
+#if defined(_M_X64)
+    return true;
+#elif defined(_MSC_VER)
+    int cpui[4]{};
     __cpuid(cpui, 1);
     return (cpui[3] & (1 << 26)) != 0;
 #else
@@ -39,7 +67,22 @@ static bool has_sse2() {
     }
     return false;
 #endif
+#else
+    return false;
+#endif
 }
+
+#if PROTOCOL_PARSER_HAS_AVX2_INTRINSICS || PROTOCOL_PARSER_HAS_SSE2_INTRINSICS
+static uint32_t first_set_bit(uint32_t mask) noexcept {
+#ifdef _MSC_VER
+    unsigned long index = 0;
+    _BitScanForward(&index, mask);
+    return static_cast<uint32_t>(index);
+#else
+    return static_cast<uint32_t>(__builtin_ctz(mask));
+#endif
+}
+#endif
 
 // 构造函数实现
 BufferView::BufferView(const void* data, size_type size) noexcept
@@ -165,21 +208,26 @@ BufferView::size_type BufferView::find_simd(uint8_t byte) const noexcept {
         return SIZE_MAX;
     }
     
+#if PROTOCOL_PARSER_HAS_AVX2_INTRINSICS
     static bool avx2_supported = has_avx2();
-    static bool sse2_supported = has_sse2();
-    
     if (avx2_supported && size_ >= 32) {
         return find_avx2(byte);
-    } else if (sse2_supported && size_ >= 16) {
-        return find_sse2(byte);
-    } else {
-        return find_scalar(byte);
     }
+#endif
+
+#if PROTOCOL_PARSER_HAS_SSE2_INTRINSICS
+    static bool sse2_supported = has_sse2();
+    if (sse2_supported && size_ >= 16) {
+        return find_sse2(byte);
+    }
+#endif
+
+    return find_scalar(byte);
 }
 
 // AVX2实现
 BufferView::size_type BufferView::find_avx2(uint8_t byte) const noexcept {
-#ifdef __AVX2__
+#if PROTOCOL_PARSER_HAS_AVX2_INTRINSICS
     const __m256i needle = _mm256_set1_epi8(static_cast<char>(byte));
     size_type i = 0;
     
@@ -190,7 +238,7 @@ BufferView::size_type BufferView::find_avx2(uint8_t byte) const noexcept {
         uint32_t mask = _mm256_movemask_epi8(cmp);
         
         if (mask != 0) {
-            return i + __builtin_ctz(mask);
+            return i + first_set_bit(mask);
         }
     }
     
@@ -200,13 +248,15 @@ BufferView::size_type BufferView::find_avx2(uint8_t byte) const noexcept {
             return i;
         }
     }
+#else
+    (void)byte;
 #endif
     return SIZE_MAX;
 }
 
 // SSE2实现
 BufferView::size_type BufferView::find_sse2(uint8_t byte) const noexcept {
-#ifdef __SSE2__
+#if PROTOCOL_PARSER_HAS_SSE2_INTRINSICS
     const __m128i needle = _mm_set1_epi8(static_cast<char>(byte));
     size_type i = 0;
     
@@ -214,10 +264,10 @@ BufferView::size_type BufferView::find_sse2(uint8_t byte) const noexcept {
     for (; i + 16 <= size_; i += 16) {
         __m128i haystack = _mm_loadu_si128(reinterpret_cast<const __m128i*>(data_ptr_ + i));
         __m128i cmp = _mm_cmpeq_epi8(haystack, needle);
-        uint16_t mask = _mm_movemask_epi8(cmp);
+        uint32_t mask = static_cast<uint32_t>(_mm_movemask_epi8(cmp));
         
         if (mask != 0) {
-            return i + __builtin_ctz(mask);
+            return i + first_set_bit(mask);
         }
     }
     
@@ -227,6 +277,8 @@ BufferView::size_type BufferView::find_sse2(uint8_t byte) const noexcept {
             return i;
         }
     }
+#else
+    (void)byte;
 #endif
     return SIZE_MAX;
 }
@@ -241,23 +293,35 @@ BufferView::size_type BufferView::find_scalar(uint8_t byte) const noexcept {
 
 // 模式查找
 BufferView::size_type BufferView::find_simd(const void* pattern, size_type pattern_size) const noexcept {
-    if (pattern_size == 0 || pattern_size > size_) {
+    if (pattern == nullptr || pattern_size == 0 || pattern_size > size_) {
         return SIZE_MAX;
     }
-    
-    if (pattern_size == 1) {
-        return find_simd(*static_cast<const uint8_t*>(pattern));
-    }
-    
-    // 使用Boyer-Moore算法的简化版本
+
     const auto* pat = static_cast<const uint8_t*>(pattern);
-    
-    for (size_type i = 0; i <= size_ - pattern_size; ++i) {
-        if (std::memcmp(data_ptr_ + i, pat, pattern_size) == 0) {
-            return i;
-        }
+    if (pattern_size == 1) {
+        return find_simd(*pat);
     }
-    
+
+    size_type search_offset = 0;
+    const size_type last_candidate = size_ - pattern_size;
+    while (search_offset <= last_candidate) {
+        const BufferView remaining(data_ptr_ + search_offset, size_ - search_offset);
+        const size_type match = remaining.find_simd(*pat);
+        if (match == SIZE_MAX) {
+            return SIZE_MAX;
+        }
+
+        const size_type candidate = search_offset + match;
+        if (candidate > last_candidate) {
+            return SIZE_MAX;
+        }
+
+        if (std::memcmp(data_ptr_ + candidate, pat, pattern_size) == 0) {
+            return candidate;
+        }
+        search_offset = candidate + 1;
+    }
+
     return SIZE_MAX;
 }
 

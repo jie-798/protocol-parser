@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(MINGW OR MSYS)
     message(STATUS "使用MinGW/MSYS2编译器")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -march=native")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
     set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
     
     # MSYS2特定设置
@@ -22,11 +22,10 @@ if(MINGW OR MSYS)
 elseif(MSVC)
     message(STATUS "使用MSVC编译器")
     add_compile_options(/W4 /permissive- /Zc:__cplusplus)
-    add_compile_options(/arch:AVX2)  # 启用AVX2支持
 else()
     message(STATUS "使用GCC/Clang编译器")
-    add_compile_options(-Wall -Wextra -Wpedantic -O3)
-    add_compile_options(-march=native)  # 启用本机CPU优化
+    add_compile_options(-Wall -Wextra -Wpedantic)
+    add_compile_options($<$<CONFIG:Release>:-O3>)
 endif()
 
 # 包含目录
@@ -44,12 +43,12 @@ if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
-# 测试 (暂时禁用，目录不存在)
-# option(BUILD_TESTS "Build tests" ON)
-# if(BUILD_TESTS)
-#     enable_testing()
-#     add_subdirectory(tests)
-# endif()
+# 测试
+option(BUILD_TESTS "Build tests" OFF)
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
 
 # 插件 (暂时禁用，目录不存在)
 # option(BUILD_PLUGINS "Build plugins" ON)

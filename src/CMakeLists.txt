@@ -21,12 +21,12 @@ file(GLOB_RECURSE MONITORING_SOURCES
 
 # 协议解析器
 file(GLOB_RECURSE PARSER_SOURCES
+    "parsers/base_parser.cpp"
     "parsers/application/http_parser.cpp"
     "parsers/application/https_parser.cpp"
     "parsers/application/ftp_parser.cpp"
     "parsers/application/ssh_parser.cpp"
     "parsers/application/dns_parser.cpp"
-    "parsers/application/smtp_parser.cpp"
     "parsers/application/pop3_parser.cpp"
     "parsers/application/telnet_parser.cpp"
     "parsers/application/snmp_parser.cpp"
@@ -47,10 +47,12 @@ file(GLOB_RECURSE PARSER_SOURCES
     "parsers/signaling/*.cpp"  # 信令协议解析器 (GTPv2, Diameter, S1AP, etc.)
 )
 
-# 检测和AI组件
+# 检测、AI和统计组件
 file(GLOB_RECURSE DETECTION_SOURCES
     "detection/protocol_detection.cpp"
+    "detection/protocol_detector.cpp"
     "ai/protocol_detector.cpp"
+    "statistics/traffic_statistics.cpp"
 )
 
 # 合并所有源文件
@@ -84,17 +86,25 @@ target_link_libraries(protocol_parser_core
 # 编译器特定优化
 if(MSVC)
     target_compile_options(protocol_parser_core PRIVATE
-        /O2 /Oi /Ot /Oy /GL /fp:fast
+        $<$<CONFIG:Release>:/O2>
+        $<$<CONFIG:Release>:/Oi>
+        $<$<CONFIG:Release>:/Ot>
+        $<$<CONFIG:Release>:/Oy>
+        $<$<CONFIG:Release>:/GL>
+        $<$<CONFIG:Release>:/fp:fast>
     )
-    target_link_options(protocol_parser_core PRIVATE
-        /LTCG
+    target_link_options(protocol_parser_core PUBLIC
+        $<$<CONFIG:Release>:/LTCG>
     )
 else()
     target_compile_options(protocol_parser_core PRIVATE
-        -O3 -flto -ffast-math -funroll-loops
+        $<$<CONFIG:Release>:-O3>
+        $<$<CONFIG:Release>:-flto>
+        $<$<CONFIG:Release>:-ffast-math>
+        $<$<CONFIG:Release>:-funroll-loops>
     )
-    target_link_options(protocol_parser_core PRIVATE
-        -flto
+    target_link_options(protocol_parser_core PUBLIC
+        $<$<CONFIG:Release>:-flto>
     )
 endif()
 
@@ -109,20 +119,6 @@ target_compile_definitions(protocol_parser_core PRIVATE
     $<$<CONFIG:Debug>:PROTOCOL_PARSER_DEBUG>
     $<$<CONFIG:Release>:PROTOCOL_PARSER_RELEASE>
 )
-
-# 为 simd_utils.cpp 添加AVX2编译选项
-if(MSVC)
-    target_compile_options(protocol_parser_core PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>:/arch:AVX2>
-    )
-    set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/utils/simd_utils.cpp
-        PROPERTIES COMPILE_FLAGS "/arch:AVX2"
-    )
-else()
-    set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/utils/simd_utils.cpp
-        PROPERTIES COMPILE_FLAGS "-mavx2 -mavx"
-    )
-endif()
 
 # 安装规则
 install(TARGETS protocol_parser_core

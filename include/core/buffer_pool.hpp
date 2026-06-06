@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <atomic>
 #include <memory>
 #include <array>
@@ -113,7 +114,8 @@ private:
 
         [[nodiscard]] size_t buffer_size() const noexcept { return buffer_size_; }
         [[nodiscard]] size_t capacity() const noexcept { return capacity_; }
-        [[nodiscard]] size_t size() const noexcept { return size_; }
+        [[nodiscard]] size_t size() const noexcept { return size_.load(std::memory_order_relaxed); }
+        [[nodiscard]] void* find_block_containing(const void* ptr) noexcept;
 
         void reserve(size_t additional_capacity);
 
@@ -127,7 +129,7 @@ private:
         Block* blocks_ = nullptr;
         size_t buffer_size_;
         size_t capacity_;
-        size_t size_ = 0;
+        std::atomic<size_t> size_{0};
         std::mutex mutex_;
 
         [[nodiscard]] size_t find_free_block();
@@ -143,23 +145,37 @@ private:
         struct CacheEntry {
             void* ptr = nullptr;
             size_t size_class = 0;
+            const BufferPool* owner = nullptr;
+            std::weak_ptr<std::atomic<bool>> owner_alive;
 
-            bool matches(size_t sc) const {
-                return ptr != nullptr && size_class == sc;
+            bool matches(size_t sc, const BufferPool* pool) const {
+                auto alive = owner_alive.lock();
+                return ptr != nullptr && size_class == sc && owner == pool &&
+                       alive && alive->load(std::memory_order_acquire);
+            }
+
+            bool is_stale() const {
+                auto alive = owner_alive.lock();
+                return ptr != nullptr && (!alive || !alive->load(std::memory_order_acquire));
             }
         };
 
         std::array<CacheEntry, CACHE_SIZE> cache_;
         std::atomic<size_t> index_{0};
 
-        void* get(size_t size_class);
-        void put(void* ptr, size_t size_class);
-        void flush();
+        void* get(size_t size_class, const BufferPool* owner);
+        bool put(void* ptr, size_t size_class, const BufferPool* owner,
+                 const std::shared_ptr<std::atomic<bool>>& owner_alive);
     };
 
     Config config_;
     std::unique_ptr<SizeClassPool> pools_[4];
     Statistics stats_;
+    mutable std::mutex stats_mutex_;
+    std::shared_ptr<std::atomic<bool>> alive_;
+
+    [[nodiscard]] bool find_pool_block(const void* ptr, size_t& pool_index, void*& block_ptr) noexcept;
+    void flush_thread_cache() noexcept;
 
     static thread_local ThreadLocalCache thread_cache_;
 };

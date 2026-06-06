@@ -1,9 +1,31 @@
 #pragma once
 
-#include <cstdint>
+#include <bit>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
+
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+#define PROTOCOL_PARSER_UTILS_X86 1
+#else
+#define PROTOCOL_PARSER_UTILS_X86 0
+#endif
+
+#if PROTOCOL_PARSER_UTILS_X86
 #include <immintrin.h>
+#endif
+
+#if PROTOCOL_PARSER_UTILS_X86 && defined(__AVX2__)
+#define PROTOCOL_PARSER_UTILS_AVX2 1
+#else
+#define PROTOCOL_PARSER_UTILS_AVX2 0
+#endif
+
+#if PROTOCOL_PARSER_UTILS_X86 && (defined(__SSE2__) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2))
+#define PROTOCOL_PARSER_UTILS_SSE2 1
+#else
+#define PROTOCOL_PARSER_UTILS_SSE2 0
+#endif
 
 namespace protocol_parser::utils {
 
@@ -18,7 +40,7 @@ public:
     // ========================================================================
 
     /**
-     * 计算 CRC32 校验和（SSE4.2 硬件加速）
+     * 计算 IEEE CRC32 校验和
      * @param data 数据指针
      * @param size 数据大小
      * @return CRC32 值
@@ -103,6 +125,7 @@ public:
     // 字节序转换（SIMD 优化）
     // ========================================================================
 
+#if PROTOCOL_PARSER_UTILS_AVX2
     /**
      * 批量转换字节序（16 字节块）
      */
@@ -112,6 +135,7 @@ public:
      * 批量转换字节序（32 字节块）
      */
     static void swap_bytes_32x8(__m256i* data);
+#endif
 
     // ========================================================================
     // 网络序整数解析（SIMD 加速）
@@ -135,14 +159,8 @@ public:
                                 size_t count);
 
 private:
-    // CRC32 查找表（用于无硬件加速的情况）
-    static uint32_t crc32_table_[256];
-    static bool crc32_table_initialized_;
-
-    static void init_crc32_table();
-
-    // 软件实现 CRC32（回退）
     static uint32_t crc32_software(const uint8_t* data, size_t size);
+    static uint32_t crc32c_software(const uint8_t* data, size_t size);
 };
 
 // ============================================================================
@@ -152,6 +170,7 @@ private:
 inline bool SIMDUtils::equals_avx2(const uint8_t* a,
                                   const uint8_t* b,
                                   size_t size) {
+#if PROTOCOL_PARSER_UTILS_AVX2
     if (size == 0) return true;
 
     size_t i = 0;
@@ -187,9 +206,13 @@ inline bool SIMDUtils::equals_avx2(const uint8_t* a,
     }
 
     return true;
+#else
+    return std::memcmp(a, b, size) == 0;
+#endif
 }
 
 inline void SIMDUtils::memset_avx2(uint8_t* data, uint8_t value, size_t size) {
+#if PROTOCOL_PARSER_UTILS_AVX2
     // 创建填充模式
     __m256i pattern = _mm256_set1_epi8(value);
 
@@ -212,11 +235,15 @@ inline void SIMDUtils::memset_avx2(uint8_t* data, uint8_t value, size_t size) {
     for (; i < size; ++i) {
         data[i] = value;
     }
+#else
+    std::memset(data, value, size);
+#endif
 }
 
 inline void SIMDUtils::memcpy_avx2(uint8_t* dst,
                                   const uint8_t* src,
                                   size_t size) {
+#if PROTOCOL_PARSER_UTILS_AVX2
     size_t i = 0;
 
     // AVX2 块
@@ -237,8 +264,12 @@ inline void SIMDUtils::memcpy_avx2(uint8_t* dst,
     for (; i < size; ++i) {
         dst[i] = src[i];
     }
+#else
+    std::memcpy(dst, src, size);
+#endif
 }
 
+#if PROTOCOL_PARSER_UTILS_AVX2
 inline void SIMDUtils::swap_bytes_16x8(__m128i* data) {
     // 使用 SSSE3 的 pshufb 指令
     __m128i shuffle_mask = _mm_set_epi8(
@@ -254,6 +285,7 @@ inline void SIMDUtils::swap_bytes_32x8(__m256i* data) {
     );
     *data = _mm256_shuffle_epi8(*data, shuffle_mask);
 }
+#endif
 
 inline void SIMDUtils::parse_be16_batch(const uint8_t* data,
                                        uint16_t* values,
@@ -261,7 +293,11 @@ inline void SIMDUtils::parse_be16_batch(const uint8_t* data,
     for (size_t i = 0; i < count; ++i) {
         uint16_t val;
         std::memcpy(&val, data + i * 2, 2);
-        values[i] = _byteswap_ushort(val);
+        if constexpr (std::endian::native == std::endian::little) {
+            values[i] = std::byteswap(val);
+        } else {
+            values[i] = val;
+        }
     }
 }
 
@@ -271,7 +307,11 @@ inline void SIMDUtils::parse_be32_batch(const uint8_t* data,
     for (size_t i = 0; i < count; ++i) {
         uint32_t val;
         std::memcpy(&val, data + i * 4, 4);
-        values[i] = _byteswap_ulong(val);
+        if constexpr (std::endian::native == std::endian::little) {
+            values[i] = std::byteswap(val);
+        } else {
+            values[i] = val;
+        }
     }
 }
 
