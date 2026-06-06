@@ -68,14 +68,25 @@ bool ICMPv6Parser::can_parse(const core::BufferView& buffer) const noexcept {
 }
 
 ParseResult ICMPv6Parser::parse(ParseContext& context) noexcept {
-    return state_machine_.execute(context);
+    reset();
+    context.state = ParserState::Parsing;
+
+    ParseResult result = ParseResult::Success;
+    while (state_machine_.current_state != ParserState::Complete &&
+           state_machine_.current_state != ParserState::Error) {
+        result = state_machine_.execute(context);
+        if (result != ParseResult::Success) {
+            break;
+        }
+    }
+
+    return result;
 }
 
 void ICMPv6Parser::reset() noexcept {
     result_ = ICMPv6ParseResult{};
     state_machine_.set_state(ParserState::Initial);
     error_message_.clear();
-    has_addresses_ = false;
 }
 
 double ICMPv6Parser::get_progress() const noexcept {
@@ -102,6 +113,7 @@ ParseResult ICMPv6Parser::parse_header(ParseContext& context) noexcept {
     auto header_result = ICMPv6Header::parse(context.buffer.substr(context.offset));
     if (!header_result) {
         error_message_ = "Failed to parse ICMPv6 header";
+        state_machine_.set_state(ParserState::Error);
         return header_result.error();
     }
     
@@ -110,6 +122,7 @@ ParseResult ICMPv6Parser::parse_header(ParseContext& context) noexcept {
     // 验证类型
     if (!is_valid_type(result_.header.type)) {
         error_message_ = "Invalid ICMPv6 type: " + std::to_string(result_.header.type);
+        state_machine_.set_state(ParserState::Error);
         return ParseResult::InvalidFormat;
     }
     
@@ -137,6 +150,7 @@ ParseResult ICMPv6Parser::parse_payload(ParseContext& context) noexcept {
     }
     
     context.offset += remaining;
+    context.metadata["icmpv6_result"] = result_;
     state_machine_.set_state(ParserState::Complete);
     return ParseResult::Success;
 }
@@ -164,6 +178,7 @@ ParseResult ICMPv6Parser::parse_nd_options(ParseContext& context) noexcept {
         default:
             // 其他类型不包含ND选项
             context.offset = context.buffer.size();
+            context.metadata["icmpv6_result"] = result_;
             state_machine_.set_state(ParserState::Complete);
             return ParseResult::Success;
     }
@@ -192,6 +207,7 @@ ParseResult ICMPv6Parser::parse_nd_options(ParseContext& context) noexcept {
     }
     
     context.offset = context.buffer.size();
+    context.metadata["icmpv6_result"] = result_;
     state_machine_.set_state(ParserState::Complete);
     return ParseResult::Success;
 }

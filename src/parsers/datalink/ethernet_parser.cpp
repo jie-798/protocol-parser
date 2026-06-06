@@ -65,6 +65,7 @@ bool EthernetParser::can_parse(const core::BufferView& buffer) const noexcept {
 }
 
 ParseResult EthernetParser::parse(ParseContext& context) noexcept {
+    reset();
     context.state = ParserState::Parsing;
     
     // 循环执行状态机直到完成或出错

@@ -1,6 +1,9 @@
 #pragma once
 
 #include "../base_parser.hpp"
+#include <cstddef>
+#include <cstdint>
+#include <utility>
 #include <vector>
 #include <string>
 #include <optional>

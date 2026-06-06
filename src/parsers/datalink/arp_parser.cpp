@@ -122,7 +122,19 @@ bool ARPParser::can_parse(const core::BufferView& buffer) const noexcept {
 }
 
 ParseResult ARPParser::parse(ParseContext& context) noexcept {
-    return state_machine_.execute(context);
+    reset();
+    context.state = ParserState::Parsing;
+
+    ParseResult result = ParseResult::Success;
+    while (state_machine_.current_state != ParserState::Complete &&
+           state_machine_.current_state != ParserState::Error) {
+        result = state_machine_.execute(context);
+        if (result != ParseResult::Success) {
+            break;
+        }
+    }
+
+    return result;
 }
 
 void ARPParser::reset() noexcept {
@@ -191,7 +203,9 @@ ParseResult ARPParser::parse_extra_data(ParseContext& context) noexcept {
         result_.extra_data = context.buffer.substr(context.offset, remaining);
         result_.total_length += remaining;
     }
-    
+
+    context.offset += remaining;
+    context.metadata["arp_result"] = result_;
     state_machine_.set_state(ParserState::Complete);
     return ParseResult::Success;
 }

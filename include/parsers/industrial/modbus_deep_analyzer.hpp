@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../core/buffer_view.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>

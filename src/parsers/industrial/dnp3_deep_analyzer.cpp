@@ -1,9 +1,9 @@
 #include "parsers/industrial/dnp3_deep_analyzer.hpp"
-#include "parsers/industrial/dnp3_deep_analyzer.hpp"
 #include <algorithm>
 #include <cstring>
 #include <iomanip>
 #include <sstream>
+#include <utility>
 
 namespace protocol_parser::parsers::industrial {
 
@@ -557,28 +557,28 @@ double DNP3DeepAnalyzer::calculate_packet_anomaly_score(const DNP3Info& info) co
 }
 
 uint32_t DNP3DeepAnalyzer::calculate_security_score(const DNP3SecurityAnalysis& analysis) const {
-    uint32_t score = 100;
-    
+    int score = 100;
+
     // 根据安全问题扣分
-    score -= analysis.security_issues.size() * 15;
-    score -= analysis.operational_risks.size() * 10;
-    
+    score -= static_cast<int>(analysis.security_issues.size() * 15);
+    score -= static_cast<int>(analysis.operational_risks.size() * 10);
+
     // 广播检测扣分
     if (analysis.broadcast_detected) {
         score -= 5;
     }
-    
+
     // 关键功能执行扣分
     if (analysis.critical_function_executed) {
         score -= 20;
     }
-    
+
     // 重放攻击可能性扣分
     if (analysis.replay_attack_possible) {
         score -= 25;
     }
-    
-    return std::max(0u, score);
+
+    return static_cast<uint32_t>(std::max(0, score));
 }
 
 std::string DNP3DeepAnalyzer::determine_risk_level(uint32_t security_score) const {
@@ -741,14 +741,152 @@ bool DNP3DeepAnalyzer::parse_dnp3_packet(const protocol_parser::core::BufferView
         }
     }
     
-    // 更新统计信息
-    update_statistics(dnp3_info);
-    
     // 检查是否为完整消息
     dnp3_info.complete_message = (dnp3_info.transport_info.fin && dnp3_info.transport_info.fir);
     dnp3_info.valid_frame = dnp3_info.parse_errors.empty();
 
+    // 更新统计信息
+    update_statistics(dnp3_info);
+
     return true;
+}
+
+bool DNP3DeepAnalyzer::reassemble_fragments(const DNP3DataLinkInfo& dl_info,
+                                           const DNP3TransportInfo& transport_info,
+                                           std::vector<uint8_t>& complete_message) {
+    uint16_t key = dl_info.source;
+
+    if (transport_info.fir) {
+        fragmented_messages_[key].clear();
+    }
+
+    auto& fragments = fragmented_messages_[key];
+    fragments.push_back(transport_info);
+
+    if (!transport_info.fin) {
+        return false;
+    }
+
+    complete_message.clear();
+    for (const auto& fragment : fragments) {
+        complete_message.insert(complete_message.end(), fragment.data.begin(), fragment.data.end());
+    }
+
+    fragmented_messages_.erase(key);
+    return true;
+}
+
+bool DNP3DeepAnalyzer::verify_block_crc(const protocol_parser::core::BufferView& buffer, size_t block_start) const {
+    if (block_start >= buffer.size()) {
+        return false;
+    }
+
+    size_t remaining = buffer.size() - block_start;
+    if (remaining < 3) {
+        return false;
+    }
+
+    size_t data_length = std::min<size_t>(16, remaining - 2);
+    size_t crc_offset = block_start + data_length;
+    if (crc_offset + 2 > buffer.size()) {
+        return false;
+    }
+
+    protocol_parser::core::BufferView block(buffer.data() + block_start, data_length);
+    uint16_t calculated = calculate_crc(block);
+    uint16_t received = static_cast<uint16_t>(buffer[crc_offset]) |
+                        (static_cast<uint16_t>(buffer[crc_offset + 1]) << 8);
+    return calculated == received;
+}
+
+bool DNP3DeepAnalyzer::analyze_authentication(const DNP3Info& info) const {
+    if (!authentication_required_) {
+        return true;
+    }
+
+    if (info.application_info.function_code == 0x83) {
+        return true;
+    }
+
+    return std::any_of(info.application_info.objects.begin(), info.application_info.objects.end(),
+        [](const DNP3Object& object) {
+            return object.group == 120;
+        });
+}
+
+bool DNP3DeepAnalyzer::detect_size_anomalies(const DNP3Info& info) const {
+    return info.datalink_info.length > 250 || info.payload_size > 2048;
+}
+
+bool DNP3DeepAnalyzer::detect_timing_anomalies(const DNP3Info& info) const {
+    return detect_timing_attacks(info);
+}
+
+bool DNP3DeepAnalyzer::detect_content_anomalies(const DNP3Info& info) const {
+    if (get_function_name(info.application_info.function_code, true).find("Unknown") == 0) {
+        return true;
+    }
+
+    return std::any_of(info.application_info.objects.begin(), info.application_info.objects.end(),
+        [this](const DNP3Object& object) {
+            return get_object_description(object.group, object.variation).find("Unknown") == 0;
+        });
+}
+
+void DNP3DeepAnalyzer::record_security_event(const std::string& event_type, const DNP3Info& info) {
+    (void)info;
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+
+    if (event_type == "authentication") {
+        stats_.authentication_attempts++;
+    } else if (event_type == "failed_authentication") {
+        stats_.failed_authentications++;
+    } else if (event_type == "dos") {
+        stats_.dos_attempts++;
+    } else if (event_type == "replay") {
+        stats_.replay_attempts++;
+    } else {
+        stats_.security_violations++;
+    }
+}
+
+std::string DNP3DeepAnalyzer::get_function_name(uint8_t function_code, bool is_application) const {
+    const auto& names = is_application ? application_function_names_ : function_code_names_;
+    auto it = names.find(function_code);
+    if (it != names.end()) {
+        return it->second;
+    }
+
+    std::stringstream name;
+    name << "Unknown Function 0x" << std::hex << static_cast<int>(function_code);
+    return name.str();
+}
+
+std::string DNP3DeepAnalyzer::get_object_description(uint8_t group, uint8_t variation) const {
+    std::string key = std::to_string(group) + ":" + std::to_string(variation);
+    auto it = object_definitions_.find(key);
+    if (it != object_definitions_.end()) {
+        return it->second;
+    }
+
+    return "Unknown Object " + key;
+}
+
+std::string DNP3DeepAnalyzer::generate_traffic_analysis() const {
+    auto stats = get_statistics();
+    std::stringstream report;
+
+    report << "=== DNP3流量分析 ===\n";
+    report << "总帧数: " << stats.total_frames << "\n";
+    report << "有效帧: " << stats.valid_frames << "\n";
+    report << "无效帧: " << stats.invalid_frames << "\n";
+    report << "CRC错误: " << stats.crc_errors << "\n";
+    report << "分片消息: " << stats.fragmented_messages << "\n";
+    report << "完整消息: " << stats.complete_messages << "\n";
+    report << "安全违规: " << stats.security_violations << "\n";
+    report << "异常数量: " << stats.anomaly_count << "\n";
+
+    return report.str();
 }
 
 } // namespace protocol_parser::parsers::industrial

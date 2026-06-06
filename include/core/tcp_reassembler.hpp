@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <functional>
+#include <utility>
 #include "buffer_view.hpp"
 
 namespace protocol_parser::core {

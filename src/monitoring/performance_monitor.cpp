@@ -1,11 +1,12 @@
 #include "monitoring/performance_monitor.hpp"
-#include "monitoring/performance_monitor.hpp"
+
 #include <algorithm>
-#include <sstream>
-#include <iomanip>
-#include <cmath>
 #include <chrono>
+#include <cmath>
+#include <exception>
 #include <fstream>
+#include <iomanip>
+#include <sstream>
 
 namespace ProtocolParser::Monitoring {
 
@@ -167,14 +168,86 @@ std::optional<PerformanceStats> PerformanceMonitor::get_protocol_parse_stats(
 
 std::optional<PerformanceStats> PerformanceMonitor::get_throughput_stats(
     const std::string& protocol, TimeWindow window) const noexcept {
-    
+
     try {
         std::shared_lock metrics_lock(metrics_mutex_);
         auto it = metric_stores_.find("throughput_" + protocol);
         if (it == metric_stores_.end()) {
             return std::nullopt;
         }
-        
+
+        return calculate_window_stats(*it->second, window);
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+
+std::optional<PerformanceStats> PerformanceMonitor::get_system_stats(TimeWindow window) const noexcept {
+    try {
+        const auto now = std::chrono::steady_clock::now();
+        const auto window_start = now - std::chrono::seconds(static_cast<uint32_t>(window));
+        std::vector<double> window_values;
+
+        std::shared_lock metrics_lock(metrics_mutex_);
+        const char* metric_names[] = {"memory_usage", "cpu_usage"};
+        for (const char* metric_name : metric_names) {
+            auto it = metric_stores_.find(metric_name);
+            if (it == metric_stores_.end()) {
+                continue;
+            }
+
+            std::shared_lock store_lock(it->second->mutex);
+            for (const auto& point : it->second->data_points) {
+                if (point.timestamp >= window_start) {
+                    window_values.push_back(point.value);
+                }
+            }
+        }
+
+        if (window_values.empty()) {
+            return std::nullopt;
+        }
+
+        std::sort(window_values.begin(), window_values.end());
+
+        PerformanceStats stats;
+        stats.count = window_values.size();
+        stats.min_value = window_values.front();
+        stats.max_value = window_values.back();
+        stats.median_value = window_values[stats.count / 2];
+        stats.p95_value = stats.count > 1 ? window_values[static_cast<size_t>(stats.count * 0.95)] : stats.max_value;
+        stats.p99_value = stats.count > 1 ? window_values[static_cast<size_t>(stats.count * 0.99)] : stats.max_value;
+
+        for (double value : window_values) {
+            stats.sum_value += value;
+        }
+        stats.avg_value = stats.sum_value / stats.count;
+
+        double variance_sum = 0.0;
+        for (double value : window_values) {
+            const double diff = value - stats.avg_value;
+            variance_sum += diff * diff;
+        }
+        stats.variance = variance_sum / stats.count;
+        stats.std_deviation = std::sqrt(stats.variance);
+        stats.start_time = window_start;
+        stats.end_time = now;
+        return stats;
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+
+std::optional<PerformanceStats> PerformanceMonitor::get_custom_metric_stats(
+    const std::string& name, TimeWindow window) const noexcept {
+
+    try {
+        std::shared_lock metrics_lock(metrics_mutex_);
+        auto it = metric_stores_.find("custom_" + name);
+        if (it == metric_stores_.end()) {
+            return std::nullopt;
+        }
+
         return calculate_window_stats(*it->second, window);
     } catch (...) {
         return std::nullopt;

@@ -1,10 +1,7 @@
 #include "../../../include/parsers/application/dns_parser.hpp"
-#include "utils/network_utils.hpp"
 #include <cstring>
 #include <sstream>
 #include <iomanip>
-
-using namespace protocol_parser::utils;
 
 namespace protocol_parser::parsers {
 
@@ -68,14 +65,12 @@ ParseResult DNSParser::parse_header(const BufferView& buffer, size_t& offset) {
         return ParseResult::NeedMoreData;
     }
 
-    const auto* header_ptr = reinterpret_cast<const DNSHeader*>(buffer.data() + offset);
-    
-    dns_message_.header.id = ntohs(header_ptr->id);
-    dns_message_.header.flags = ntohs(header_ptr->flags);
-    dns_message_.header.qdcount = ntohs(header_ptr->qdcount);
-    dns_message_.header.ancount = ntohs(header_ptr->ancount);
-    dns_message_.header.nscount = ntohs(header_ptr->nscount);
-    dns_message_.header.arcount = ntohs(header_ptr->arcount);
+    dns_message_.header.id = buffer.read_be16(offset);
+    dns_message_.header.flags = buffer.read_be16(offset + 2);
+    dns_message_.header.qdcount = buffer.read_be16(offset + 4);
+    dns_message_.header.ancount = buffer.read_be16(offset + 6);
+    dns_message_.header.nscount = buffer.read_be16(offset + 8);
+    dns_message_.header.arcount = buffer.read_be16(offset + 10);
 
     offset += sizeof(DNSHeader);
     return ParseResult::Success;
@@ -98,9 +93,9 @@ ParseResult DNSParser::parse_questions(const BufferView& buffer, size_t& offset)
             return ParseResult::NeedMoreData;
         }
 
-        question.qtype = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data() + offset));
+        question.qtype = buffer.read_be16(offset);
         offset += 2;
-        question.qclass = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data() + offset));
+        question.qclass = buffer.read_be16(offset);
         offset += 2;
 
         dns_message_.questions.push_back(question);
@@ -127,13 +122,13 @@ ParseResult DNSParser::parse_resource_records(const BufferView& buffer, size_t& 
             return ParseResult::NeedMoreData;
         }
 
-        record.type = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data() + offset));
+        record.type = buffer.read_be16(offset);
         offset += 2;
-        record.rr_class = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data() + offset));
+        record.rr_class = buffer.read_be16(offset);
         offset += 2;
-        record.ttl = ntohl(*reinterpret_cast<const uint32_t*>(buffer.data() + offset));
+        record.ttl = buffer.read_be32(offset);
         offset += 4;
-        record.rdlength = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data() + offset));
+        record.rdlength = buffer.read_be16(offset);
         offset += 2;
 
         // Parse resource data
@@ -242,6 +237,10 @@ bool DNSParser::is_authoritative() const {
 
 bool DNSParser::is_truncated() const {
     return (dns_message_.header.flags & 0x0200) != 0;
+}
+
+std::string DNSParser::format_domain_name(const std::vector<uint8_t>& data, size_t& offset) const {
+    return parse_domain_name(BufferView(data.data(), data.size()), offset);
 }
 
 std::string DNSParser::record_type_to_string(uint16_t type) const {

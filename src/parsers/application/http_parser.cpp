@@ -485,12 +485,20 @@ double HTTPParser::get_progress() const noexcept {
     return is_complete_ ? 1.0 : 0.5; // 简单的进度指示
 }
 
+HTTPMessageType HTTPParser::get_message_type() const {
+    return http_message_.type;
+}
+
 bool HTTPParser::is_request() const {
     return http_message_.type == HTTPMessageType::REQUEST;
 }
 
 bool HTTPParser::is_response() const {
     return http_message_.type == HTTPMessageType::RESPONSE;
+}
+
+bool HTTPParser::is_complete() const {
+    return is_complete_;
 }
 
 std::string HTTPParser::get_error_message() const noexcept {

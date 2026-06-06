@@ -1,19 +1,10 @@
 #include "parsers/application/snmp_parser.hpp"
-#include <cstring>
-#include <algorithm>
-#include <sstream>
-#include <iomanip>
 
-#ifdef _WIN32
-#include <winsock2.h>
-// Windows宏与枚举值冲突，临时取消定义
-#pragma push_macro("max")
-#pragma push_macro("min")
-#pragma push_macro("NO_ERROR")
-#undef max
-#undef min
-#undef NO_ERROR
-#endif
+#include <algorithm>
+#include <cstring>
+#include <exception>
+#include <iomanip>
+#include <sstream>
 
 namespace protocol_parser::parsers {
 
@@ -409,6 +400,68 @@ std::string SNMPParser::version_to_string(SNMPVersion version) noexcept {
     }
 }
 
+std::string SNMPParser::ber_type_to_string(BERType type) noexcept {
+    switch (type) {
+        case BERType::INTEGER: return "INTEGER";
+        case BERType::OCTET_STRING: return "OCTET STRING";
+        case BERType::NULL_TYPE: return "NULL";
+        case BERType::OBJECT_IDENTIFIER: return "OBJECT IDENTIFIER";
+        case BERType::SEQUENCE: return "SEQUENCE";
+        case BERType::IPADDRESS: return "IpAddress";
+        case BERType::COUNTER32: return "Counter32";
+        case BERType::GAUGE32: return "Gauge32";
+        case BERType::TIMETICKS: return "TimeTicks";
+        case BERType::OPAQUE: return "Opaque";
+        case BERType::COUNTER64: return "Counter64";
+        default: return "Unknown";
+    }
+}
+
+bool SNMPParser::is_valid_community(const std::string& community) noexcept {
+    return !community.empty() && community.size() <= 255;
+}
+
+uint32_t SNMPParser::ip_string_to_uint32(const std::string& ip) noexcept {
+    try {
+        std::istringstream stream(ip);
+        std::string part;
+        uint32_t result = 0;
+
+        for (int i = 0; i < 4; ++i) {
+            if (!std::getline(stream, part, '.') || part.empty()) {
+                return 0;
+            }
+
+            const auto value = std::stoul(part);
+            if (value > 255) {
+                return 0;
+            }
+
+            result = (result << 8) | static_cast<uint32_t>(value);
+        }
+
+        return stream.eof() ? result : 0;
+    } catch (const std::exception&) {
+        return 0;
+    }
+}
+
+std::optional<SNMPParser::MIBInfo> SNMPParser::lookup_oid(const OID& oid) const noexcept {
+    try {
+        const auto it = mib_database_.find(oid.to_string());
+        if (it == mib_database_.end()) {
+            return std::nullopt;
+        }
+        return it->second;
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+}
+
+void SNMPParser::load_mib_database(const std::string& mib_file_path) {
+    (void)mib_file_path;
+}
+
 // 私有方法实现（简化版）
 bool SNMPParser::parse_ber_sequence(const uint8_t* data, size_t size, size_t& offset) noexcept {
     if (offset >= size || data[offset] != static_cast<uint8_t>(BERType::SEQUENCE)) {
@@ -477,6 +530,169 @@ bool SNMPParser::parse_ber_integer(const uint8_t* data, size_t size, size_t& off
     return true;
 }
 
+bool SNMPParser::parse_ber_oid(const uint8_t* data, size_t size, size_t& offset, OID& oid) noexcept {
+    if (offset >= size || data[offset] != static_cast<uint8_t>(BERType::OBJECT_IDENTIFIER)) {
+        return false;
+    }
+
+    ++offset;
+    size_t length = 0;
+    if (!parse_ber_length(data, size, offset, length) || length == 0 || offset + length > size) {
+        return false;
+    }
+
+    const size_t end = offset + length;
+    std::vector<uint32_t> components;
+    const uint8_t first = data[offset++];
+    if (first < 40) {
+        components.push_back(0);
+        components.push_back(first);
+    } else if (first < 80) {
+        components.push_back(1);
+        components.push_back(first - 40);
+    } else {
+        components.push_back(2);
+        components.push_back(first - 80);
+    }
+
+    while (offset < end) {
+        uint32_t component = 0;
+        bool completed = false;
+
+        while (offset < end) {
+            const uint8_t byte = data[offset++];
+            component = (component << 7) | (byte & 0x7F);
+            if ((byte & 0x80) == 0) {
+                completed = true;
+                break;
+            }
+        }
+
+        if (!completed) {
+            return false;
+        }
+        components.push_back(component);
+    }
+
+    oid = OID(components);
+    return validate_oid(oid);
+}
+
+bool SNMPParser::parse_snmp_value(const uint8_t* data, size_t size, size_t& offset, BERType type, SNMPValue& value) noexcept {
+    auto parse_unsigned = [&](size_t max_length, uint64_t& parsed) noexcept -> bool {
+        if (offset >= size || data[offset] != static_cast<uint8_t>(type)) {
+            return false;
+        }
+
+        ++offset;
+        size_t length = 0;
+        if (!parse_ber_length(data, size, offset, length) || length == 0 || length > max_length || offset + length > size) {
+            return false;
+        }
+
+        parsed = 0;
+        for (size_t i = 0; i < length; ++i) {
+            parsed = (parsed << 8) | data[offset++];
+        }
+        return true;
+    };
+
+    switch (type) {
+        case BERType::INTEGER: {
+            int64_t parsed = 0;
+            if (!parse_ber_integer(data, size, offset, parsed)) {
+                return false;
+            }
+            value = parsed;
+            return true;
+        }
+        case BERType::OCTET_STRING: {
+            std::string parsed;
+            if (!parse_ber_octet_string(data, size, offset, parsed)) {
+                return false;
+            }
+            value = parsed;
+            return true;
+        }
+        case BERType::NULL_TYPE: {
+            if (offset >= size || data[offset] != static_cast<uint8_t>(BERType::NULL_TYPE)) {
+                return false;
+            }
+            ++offset;
+            size_t length = 0;
+            if (!parse_ber_length(data, size, offset, length) || offset + length > size) {
+                return false;
+            }
+            offset += length;
+            value = std::monostate{};
+            return length == 0;
+        }
+        case BERType::OBJECT_IDENTIFIER: {
+            OID parsed;
+            if (!parse_ber_oid(data, size, offset, parsed)) {
+                return false;
+            }
+            value = parsed;
+            return true;
+        }
+        case BERType::IPADDRESS: {
+            uint64_t parsed = 0;
+            if (!parse_unsigned(4, parsed)) {
+                return false;
+            }
+            value.emplace<4>(static_cast<uint32_t>(parsed));
+            return true;
+        }
+        case BERType::COUNTER32: {
+            uint64_t parsed = 0;
+            if (!parse_unsigned(4, parsed)) {
+                return false;
+            }
+            value.emplace<5>(static_cast<uint32_t>(parsed));
+            return true;
+        }
+        case BERType::GAUGE32: {
+            uint64_t parsed = 0;
+            if (!parse_unsigned(4, parsed)) {
+                return false;
+            }
+            value.emplace<6>(static_cast<uint32_t>(parsed));
+            return true;
+        }
+        case BERType::TIMETICKS: {
+            uint64_t parsed = 0;
+            if (!parse_unsigned(4, parsed)) {
+                return false;
+            }
+            value.emplace<7>(static_cast<uint32_t>(parsed));
+            return true;
+        }
+        case BERType::OPAQUE: {
+            if (offset >= size || data[offset] != static_cast<uint8_t>(BERType::OPAQUE)) {
+                return false;
+            }
+            ++offset;
+            size_t length = 0;
+            if (!parse_ber_length(data, size, offset, length) || offset + length > size) {
+                return false;
+            }
+            value = std::vector<uint8_t>(data + offset, data + offset + length);
+            offset += length;
+            return true;
+        }
+        case BERType::COUNTER64: {
+            uint64_t parsed = 0;
+            if (!parse_unsigned(8, parsed)) {
+                return false;
+            }
+            value = parsed;
+            return true;
+        }
+        default:
+            return false;
+    }
+}
+
 bool SNMPParser::parse_v1_v2c_message(const uint8_t* data, size_t size, size_t& offset) noexcept {
     // 解析community字符串
     if (!parse_ber_octet_string(data, size, offset, snmp_message_.community)) {
@@ -488,8 +704,9 @@ bool SNMPParser::parse_v1_v2c_message(const uint8_t* data, size_t size, size_t& 
 }
 
 bool SNMPParser::parse_v3_message(const uint8_t* data, size_t size, size_t& offset) noexcept {
-    // 简化实现 - 实际需要解析完整的v3消息结构
-    // 这里只是框架代码
+    (void)data;
+    (void)size;
+    (void)offset;
     return true;
 }
 
@@ -554,21 +771,120 @@ std::string SNMPParser::classify_oid_by_prefix(const OID& oid) const noexcept {
 
 // 简化的其他方法实现...
 bool SNMPParser::parse_ber_octet_string(const uint8_t* data, size_t size, size_t& offset, std::string& value) noexcept {
-    // 简化实现
+    if (offset >= size || data[offset] != static_cast<uint8_t>(BERType::OCTET_STRING)) {
+        return false;
+    }
+
+    ++offset;
+    size_t length = 0;
+    if (!parse_ber_length(data, size, offset, length) || offset + length > size) {
+        return false;
+    }
+
+    value.assign(reinterpret_cast<const char*>(data + offset), length);
+    offset += length;
     return true;
 }
 
 bool SNMPParser::parse_pdu(const uint8_t* data, size_t size, size_t& offset, SNMPPDU& pdu) noexcept {
-    // 简化实现
-    return true;
+    if (offset >= size) {
+        return false;
+    }
+
+    const uint8_t pdu_tag = data[offset++];
+    if (pdu_tag < 0xA0 || pdu_tag > 0xA8) {
+        return false;
+    }
+
+    size_t length = 0;
+    if (!parse_ber_length(data, size, offset, length) || offset + length > size) {
+        return false;
+    }
+
+    const size_t end = offset + length;
+    pdu.type = static_cast<SNMPPDUType>(pdu_tag - 0xA0);
+
+    int64_t request_id = 0;
+    int64_t error_status = 0;
+    int64_t error_index = 0;
+    if (!parse_ber_integer(data, end, offset, request_id) ||
+        !parse_ber_integer(data, end, offset, error_status) ||
+        !parse_ber_integer(data, end, offset, error_index)) {
+        return false;
+    }
+
+    pdu.request_id = static_cast<uint32_t>(request_id);
+    pdu.error_status = static_cast<SNMPErrorStatus>(error_status);
+    pdu.error_index = static_cast<uint32_t>(error_index);
+
+    if (!parse_variable_bindings(data, end, offset, pdu.variable_bindings)) {
+        return false;
+    }
+
+    offset = end;
+    return validate_pdu(pdu);
+}
+
+bool SNMPParser::parse_variable_bindings(const uint8_t* data, size_t size, size_t& offset, std::vector<VarBind>& bindings) noexcept {
+    if (offset >= size || data[offset] != static_cast<uint8_t>(BERType::SEQUENCE)) {
+        return false;
+    }
+
+    ++offset;
+    size_t length = 0;
+    if (!parse_ber_length(data, size, offset, length) || offset + length > size) {
+        return false;
+    }
+
+    const size_t end = offset + length;
+    while (offset < end) {
+        if (data[offset] != static_cast<uint8_t>(BERType::SEQUENCE)) {
+            return false;
+        }
+
+        ++offset;
+        size_t binding_length = 0;
+        if (!parse_ber_length(data, end, offset, binding_length) || offset + binding_length > end) {
+            return false;
+        }
+
+        const size_t binding_end = offset + binding_length;
+        VarBind binding;
+        if (!parse_ber_oid(data, binding_end, offset, binding.oid) || offset >= binding_end) {
+            return false;
+        }
+
+        binding.type = static_cast<BERType>(data[offset]);
+        if (!parse_snmp_value(data, binding_end, offset, binding.type, binding.value) || offset != binding_end) {
+            return false;
+        }
+
+        bindings.push_back(binding);
+    }
+
+    return offset == end;
+}
+
+bool SNMPParser::validate_oid(const OID& oid) const noexcept {
+    return oid.is_valid() && oid.components().size() <= MAX_OID_LENGTH;
 }
 
 bool SNMPParser::validate_pdu(const SNMPPDU& pdu) const noexcept {
-    return true;
+    return pdu.variable_bindings.size() <= MAX_VARBIND_COUNT;
+}
+
+bool SNMPParser::detect_dos_patterns() const noexcept {
+    return snmp_message_.get_pdu().variable_bindings.size() > MAX_VARBIND_COUNT;
+}
+
+bool SNMPParser::validate_message_size() const noexcept {
+    return parsed_successfully_ || !is_malformed_;
 }
 
 void SNMPParser::perform_security_analysis() noexcept {
-    // 安全分析实现
+    if (detect_dos_patterns()) {
+        is_malformed_ = true;
+    }
 }
 
 void SNMPParser::initialize_standard_mibs() noexcept {

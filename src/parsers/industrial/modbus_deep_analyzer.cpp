@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iomanip>
 #include <sstream>
+#include <utility>
 
 namespace protocol_parser::industrial {
 
@@ -39,18 +40,144 @@ ModbusDeepAnalyzer::ModbusDeepAnalyzer()
 
 bool ModbusDeepAnalyzer::can_parse(const protocol_parser::core::BufferView& buffer) const {
     if (buffer.size() < 8) return false; // 最小MBAP头 + 功能码
-    
+
     // 检查事务ID和协议ID
     uint16_t protocol_id = (buffer[2] << 8) | buffer[3];
     if (protocol_id != 0x0000) return false;
-    
+
     // 检查长度字段
     uint16_t length = (buffer[4] << 8) | buffer[5];
     if (length < 2 || length > 253) return false;
-    
+    if (static_cast<size_t>(length) + 6 > buffer.size()) return false;
+
     // 检查功能码
     uint8_t function_code = buffer[7];
     return is_valid_function_code(function_code & 0x7F);
+}
+
+ModbusVariant ModbusDeepAnalyzer::detect_variant(const protocol_parser::core::BufferView& buffer) const {
+    if (can_parse(buffer)) {
+        return ModbusVariant::TCP;
+    }
+
+    if (buffer.size() >= MODBUS_ASCII_MIN_SIZE &&
+        buffer[0] == static_cast<uint8_t>(MODBUS_ASCII_START) &&
+        buffer[buffer.size() - 2] == static_cast<uint8_t>(MODBUS_ASCII_END_CR) &&
+        buffer[buffer.size() - 1] == static_cast<uint8_t>(MODBUS_ASCII_END_LF)) {
+        return ModbusVariant::ASCII;
+    }
+
+    return ModbusVariant::RTU;
+}
+
+bool ModbusDeepAnalyzer::parse_modbus_tcp(const protocol_parser::core::BufferView& buffer, ModbusInfo& info) {
+    return parse_modbus_packet(buffer, info);
+}
+
+bool ModbusDeepAnalyzer::parse_modbus_rtu(const protocol_parser::core::BufferView& buffer, ModbusInfo& info) {
+    if (buffer.size() < MODBUS_RTU_MIN_SIZE) {
+        return false;
+    }
+
+    if (crc_validation_enabled_ && !verify_crc(buffer)) {
+        info.validation_errors.push_back("Invalid RTU CRC");
+        return false;
+    }
+
+    info.variant = ModbusVariant::RTU;
+    info.slave_id = buffer[0];
+    info.unit_id = info.slave_id;
+    info.is_broadcast = is_broadcast_address(info.slave_id);
+    info.crc = static_cast<uint16_t>(buffer[buffer.size() - 2]) |
+               (static_cast<uint16_t>(buffer[buffer.size() - 1]) << 8);
+
+    protocol_parser::core::BufferView pdu_buffer(buffer.data() + 1, buffer.size() - 3);
+    if (!parse_pdu(pdu_buffer, info)) {
+        return false;
+    }
+
+    info.start_address = info.starting_address;
+    info.raw_data.assign(buffer.data(), buffer.data() + buffer.size());
+    info.is_valid = true;
+
+    if (security_monitoring_enabled_) {
+        info.security_analysis = analyze_security(info);
+    }
+
+    if (anomaly_detection_enabled_) {
+        analyze_anomalies(info);
+    }
+
+    update_statistics(info);
+    return true;
+}
+
+bool ModbusDeepAnalyzer::parse_modbus_ascii(const protocol_parser::core::BufferView& buffer, ModbusInfo& info) {
+    if (buffer.size() < MODBUS_ASCII_MIN_SIZE ||
+        buffer[0] != static_cast<uint8_t>(MODBUS_ASCII_START) ||
+        buffer[buffer.size() - 2] != static_cast<uint8_t>(MODBUS_ASCII_END_CR) ||
+        buffer[buffer.size() - 1] != static_cast<uint8_t>(MODBUS_ASCII_END_LF)) {
+        return false;
+    }
+
+    auto hex_value = [](uint8_t c) -> int {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        return -1;
+    };
+
+    const size_t hex_length = buffer.size() - 3;
+    if ((hex_length % 2) != 0) {
+        return false;
+    }
+
+    std::vector<uint8_t> frame;
+    frame.reserve(hex_length / 2);
+    for (size_t i = 1; i + 1 < buffer.size() - 2; i += 2) {
+        int high = hex_value(buffer[i]);
+        int low = hex_value(buffer[i + 1]);
+        if (high < 0 || low < 0) {
+            return false;
+        }
+        frame.push_back(static_cast<uint8_t>((high << 4) | low));
+    }
+
+    if (frame.size() < 3) {
+        return false;
+    }
+
+    protocol_parser::core::BufferView frame_view(frame.data(), frame.size());
+    if (crc_validation_enabled_ && !verify_lrc(frame_view)) {
+        info.validation_errors.push_back("Invalid ASCII LRC");
+        return false;
+    }
+
+    info.variant = ModbusVariant::ASCII;
+    info.slave_id = frame[0];
+    info.unit_id = info.slave_id;
+    info.is_broadcast = is_broadcast_address(info.slave_id);
+    info.lrc = frame.back();
+
+    protocol_parser::core::BufferView pdu_buffer(frame.data() + 1, frame.size() - 2);
+    if (!parse_pdu(pdu_buffer, info)) {
+        return false;
+    }
+
+    info.start_address = info.starting_address;
+    info.raw_data.assign(buffer.data(), buffer.data() + buffer.size());
+    info.is_valid = true;
+
+    if (security_monitoring_enabled_) {
+        info.security_analysis = analyze_security(info);
+    }
+
+    if (anomaly_detection_enabled_) {
+        analyze_anomalies(info);
+    }
+
+    update_statistics(info);
+    return true;
 }
 
 bool ModbusDeepAnalyzer::parse_modbus_packet(const protocol_parser::core::BufferView& buffer, ModbusInfo& modbus_info) {
@@ -126,12 +253,18 @@ bool ModbusDeepAnalyzer::parse_modbus_packet(const protocol_parser::core::Buffer
     }
 
     // 解析PDU
-    size_t pdu_offset = 6; // MBAP头后
-    protocol_parser::core::BufferView pdu_buffer(buffer.data() + pdu_offset, modbus_info.length);
+    size_t pdu_offset = MODBUS_TCP_HEADER_SIZE;
+    size_t pdu_length = modbus_info.length > 0 ? modbus_info.length - 1 : 0;
+    if (pdu_offset + pdu_length > buffer.size()) {
+        return false;
+    }
+
+    protocol_parser::core::BufferView pdu_buffer(buffer.data() + pdu_offset, pdu_length);
 
     if (!parse_pdu(pdu_buffer, modbus_info)) {
         return false;
     }
+    modbus_info.start_address = modbus_info.starting_address;
 
     // 执行深度分析
     if (security_monitoring_enabled_) {
@@ -141,6 +274,9 @@ bool ModbusDeepAnalyzer::parse_modbus_packet(const protocol_parser::core::Buffer
     if (anomaly_detection_enabled_) {
         analyze_anomalies(modbus_info);
     }
+
+    modbus_info.raw_data.assign(buffer.data(), buffer.data() + buffer.size());
+    modbus_info.is_valid = true;
 
     // 更新统计信息
     update_statistics(modbus_info);
@@ -155,7 +291,13 @@ bool ModbusDeepAnalyzer::parse_mbap_header(const protocol_parser::core::BufferVi
     modbus_info.protocol_id = (buffer[2] << 8) | buffer[3];
     modbus_info.length = (buffer[4] << 8) | buffer[5];
     modbus_info.unit_id = buffer[6];
-    
+    modbus_info.mbap_header.transaction_id = modbus_info.transaction_id;
+    modbus_info.mbap_header.protocol_id = modbus_info.protocol_id;
+    modbus_info.mbap_header.length = modbus_info.length;
+    modbus_info.mbap_header.unit_id = modbus_info.unit_id;
+    modbus_info.slave_id = modbus_info.unit_id;
+    modbus_info.is_broadcast = is_broadcast_address(modbus_info.unit_id);
+
     return modbus_info.protocol_id == 0x0000;
 }
 
@@ -164,11 +306,16 @@ bool ModbusDeepAnalyzer::parse_pdu(const protocol_parser::core::BufferView& buff
     
     modbus_info.function_code = buffer[0];
     modbus_info.is_exception = (modbus_info.function_code & 0x80) != 0;
-    
+    modbus_info.pdu.function_code = static_cast<ModbusFunctionCode>(modbus_info.function_code & 0x7F);
+    modbus_info.pdu.is_exception = modbus_info.is_exception;
+    if (buffer.size() > 1) {
+        modbus_info.pdu.data.assign(buffer.data() + 1, buffer.data() + buffer.size());
+    }
+
     if (modbus_info.is_exception) {
         return parse_exception_response(buffer, modbus_info);
     }
-    
+
     return parse_function_specific_data(buffer, modbus_info);
 }
 
@@ -176,7 +323,8 @@ bool ModbusDeepAnalyzer::parse_exception_response(const protocol_parser::core::B
     if (buffer.size() < 2) return false;
     
     modbus_info.exception_code = buffer[1];
-    
+    modbus_info.pdu.exception_code = static_cast<ModbusExceptionCode>(modbus_info.exception_code);
+
     auto it = exception_codes_.find(modbus_info.exception_code);
     if (it != exception_codes_.end()) {
         modbus_info.exception_description = it->second;
@@ -398,9 +546,24 @@ ModbusSecurityAnalysis ModbusDeepAnalyzer::analyze_security(const ModbusInfo& in
         }
     }
     
+    analyze_traffic_patterns(info, analysis);
+    analyze_function_codes(info, analysis);
+    analyze_access_patterns(info, analysis);
+    check_for_attacks(info, analysis);
+
     // 计算安全评分
     analysis.security_score = calculate_security_score(analysis);
-    
+    analysis.is_secure = analysis.security_score >= 80 && analysis.vulnerabilities.empty();
+    if (analysis.security_score >= 80) {
+        analysis.risk_level = "LOW";
+    } else if (analysis.security_score >= 60) {
+        analysis.risk_level = "MEDIUM";
+    } else if (analysis.security_score >= 40) {
+        analysis.risk_level = "HIGH";
+    } else {
+        analysis.risk_level = "CRITICAL";
+    }
+
     return analysis;
 }
 
@@ -526,26 +689,26 @@ bool ModbusDeepAnalyzer::is_critical_address(uint16_t address) const {
 }
 
 uint32_t ModbusDeepAnalyzer::calculate_security_score(const ModbusSecurityAnalysis& analysis) const {
-    uint32_t score = 100; // 基础分数
-    
+    int score = 100; // 基础分数
+
     // 根据漏洞数量扣分
-    score -= analysis.vulnerabilities.size() * 15;
-    
+    score -= static_cast<int>(analysis.vulnerabilities.size() * 15);
+
     // 扫描检测扣分
     if (analysis.scan_detected) {
         score -= 25;
     }
-    
+
     // 缺乏认证和加密扣分
     if (analysis.no_authentication) {
         score -= 20;
     }
-    
+
     if (analysis.no_encryption) {
         score -= 20;
     }
-    
-    return std::max(0u, score);
+
+    return static_cast<uint32_t>(std::max(0, score));
 }
 
 void ModbusDeepAnalyzer::update_statistics(const ModbusInfo& info) {
@@ -555,15 +718,30 @@ void ModbusDeepAnalyzer::update_statistics(const ModbusInfo& info) {
     internal_stats_.function_code_counts[info.function_code]++;
     internal_stats_.unit_id_counts[info.unit_id]++;
 
+    global_stats_.function_code_counts[info.function_code]++;
+    global_stats_.slave_message_counts[info.unit_id]++;
+    global_stats_.bytes_received.fetch_add(info.raw_data.size(), std::memory_order_relaxed);
+    global_stats_.last_activity = std::chrono::system_clock::now();
+
+    if (info.is_request) {
+        global_stats_.total_requests.fetch_add(1, std::memory_order_relaxed);
+    } else {
+        global_stats_.total_responses.fetch_add(1, std::memory_order_relaxed);
+    }
+
     if (info.is_exception) {
         internal_stats_.exception_count++;
         internal_stats_.exception_code_counts[info.exception_code]++;
+        global_stats_.exception_responses.fetch_add(1, std::memory_order_relaxed);
+        global_stats_.exception_counts[info.exception_code]++;
     }
 
     if (is_write_function(info.function_code)) {
         internal_stats_.write_operations++;
+        global_stats_.write_requests.fetch_add(1, std::memory_order_relaxed);
     } else {
         internal_stats_.read_operations++;
+        global_stats_.read_requests.fetch_add(1, std::memory_order_relaxed);
     }
 
     if (!info.anomalies.empty()) {
@@ -639,6 +817,283 @@ std::string ModbusDeepAnalyzer::generate_security_report(const ModbusInfo& info)
         }
     }
     
+    return report.str();
+}
+
+std::vector<std::string> ModbusDeepAnalyzer::detect_vulnerabilities(const ModbusInfo& info) const {
+    std::vector<std::string> vulnerabilities;
+
+    if (info.security_analysis.no_authentication) {
+        vulnerabilities.push_back("No authentication support");
+    }
+    if (info.security_analysis.no_encryption) {
+        vulnerabilities.push_back("No encryption support");
+    }
+    if (detect_unauthorized_access(info)) {
+        vulnerabilities.push_back("Potential unauthorized access detected");
+    }
+    if (is_suspicious_function_code(static_cast<ModbusFunctionCode>(info.function_code & 0x7F))) {
+        vulnerabilities.push_back("Suspicious function code used");
+    }
+    if (is_write_function(info.function_code) && is_critical_address(info.start_address)) {
+        vulnerabilities.push_back("Critical address write detected");
+    }
+
+    return vulnerabilities;
+}
+
+std::vector<std::string> ModbusDeepAnalyzer::detect_anomalies(const ModbusInfo& info) const {
+    std::vector<std::string> anomalies = info.anomalies;
+
+    if (is_high_frequency_request(info.unit_id)) {
+        anomalies.push_back("High frequency request pattern");
+    }
+    if (is_unusual_register_access(info.start_address, info.quantity)) {
+        anomalies.push_back("Unusual register access range");
+    }
+    if (info.transaction_id == 0 && info.variant == ModbusVariant::TCP) {
+        anomalies.push_back("Zero transaction ID");
+    }
+    if (info.is_exception) {
+        anomalies.push_back("Exception response observed: " + get_exception_name(static_cast<ModbusExceptionCode>(info.exception_code)));
+    }
+
+    return anomalies;
+}
+
+uint32_t ModbusDeepAnalyzer::calculate_security_score(const ModbusInfo& info) const {
+    return calculate_security_score(analyze_security(info));
+}
+
+void ModbusDeepAnalyzer::register_device(const ModbusDevice& device) {
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+    known_devices_[device.slave_id] = device;
+}
+
+ModbusDevice* ModbusDeepAnalyzer::find_device(uint8_t slave_id) {
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+    auto it = known_devices_.find(slave_id);
+    return it != known_devices_.end() ? &it->second : nullptr;
+}
+
+std::vector<ModbusDevice> ModbusDeepAnalyzer::get_known_devices() const {
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+    std::vector<ModbusDevice> devices;
+    devices.reserve(known_devices_.size());
+
+    for (const auto& [_, device] : known_devices_) {
+        devices.push_back(device);
+    }
+
+    return devices;
+}
+
+void ModbusDeepAnalyzer::update_device_status(uint8_t slave_id, bool online) {
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+    auto& device = known_devices_[slave_id];
+    device.slave_id = slave_id;
+    device.is_online = online;
+    device.last_seen = std::chrono::system_clock::now();
+}
+
+bool ModbusDeepAnalyzer::detect_replay_attack(const ModbusInfo& info) const {
+    static std::mutex replay_mutex;
+    static std::unordered_map<uint64_t, std::chrono::steady_clock::time_point> recent_requests;
+
+    const uint64_t key = (static_cast<uint64_t>(info.unit_id) << 48) |
+                         (static_cast<uint64_t>(info.transaction_id) << 16) |
+                         info.function_code;
+    auto now = std::chrono::steady_clock::now();
+    std::lock_guard<std::mutex> lock(replay_mutex);
+
+    for (auto it = recent_requests.begin(); it != recent_requests.end();) {
+        if (now - it->second > std::chrono::seconds(60)) {
+            it = recent_requests.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    auto it = recent_requests.find(key);
+    if (it != recent_requests.end() && now - it->second < std::chrono::seconds(5)) {
+        it->second = now;
+        return true;
+    }
+
+    recent_requests[key] = now;
+    return false;
+}
+
+bool ModbusDeepAnalyzer::detect_dos_attempt(const ModbusInfo& info) const {
+    return is_high_frequency_request(info.unit_id) ||
+           info.quantity > 2000 ||
+           info.validation_errors.size() > 3;
+}
+
+bool ModbusDeepAnalyzer::verify_crc(const protocol_parser::core::BufferView& buffer) const {
+    if (buffer.size() < MODBUS_RTU_MIN_SIZE) {
+        return false;
+    }
+
+    protocol_parser::core::BufferView payload(buffer.data(), buffer.size() - 2);
+    uint16_t calculated = calculate_crc(payload);
+    uint16_t received = static_cast<uint16_t>(buffer[buffer.size() - 2]) |
+                        (static_cast<uint16_t>(buffer[buffer.size() - 1]) << 8);
+    return calculated == received;
+}
+
+bool ModbusDeepAnalyzer::verify_lrc(const protocol_parser::core::BufferView& buffer) const {
+    if (buffer.size() < 2) {
+        return false;
+    }
+
+    protocol_parser::core::BufferView payload(buffer.data(), buffer.size() - 1);
+    return calculate_lrc(payload) == buffer[buffer.size() - 1];
+}
+
+uint16_t ModbusDeepAnalyzer::calculate_crc(const protocol_parser::core::BufferView& buffer) const {
+    uint16_t crc = 0xFFFF;
+
+    for (size_t i = 0; i < buffer.size(); ++i) {
+        crc ^= buffer[i];
+        for (int bit = 0; bit < 8; ++bit) {
+            if ((crc & 0x0001) != 0) {
+                crc = (crc >> 1) ^ 0xA001;
+            } else {
+                crc >>= 1;
+            }
+        }
+    }
+
+    return crc;
+}
+
+uint8_t ModbusDeepAnalyzer::calculate_lrc(const protocol_parser::core::BufferView& buffer) const {
+    uint8_t sum = 0;
+    for (size_t i = 0; i < buffer.size(); ++i) {
+        sum = static_cast<uint8_t>(sum + buffer[i]);
+    }
+    return static_cast<uint8_t>(-sum);
+}
+
+void ModbusDeepAnalyzer::analyze_traffic_patterns(const ModbusInfo& info, ModbusSecurityAnalysis& analysis) const {
+    if (info.is_broadcast) {
+        analysis.broadcast_detected = true;
+        analysis.warnings.push_back("Broadcast request detected");
+    }
+    if (is_high_frequency_request(info.unit_id)) {
+        analysis.abnormal_traffic_pattern = true;
+        analysis.vulnerabilities.push_back("High frequency Modbus traffic detected");
+    }
+}
+
+void ModbusDeepAnalyzer::analyze_function_codes(const ModbusInfo& info, ModbusSecurityAnalysis& analysis) const {
+    auto function_code = static_cast<ModbusFunctionCode>(info.function_code & 0x7F);
+    if (is_suspicious_function_code(function_code)) {
+        analysis.suspicious_function_codes = true;
+        analysis.vulnerabilities.push_back("Suspicious Modbus function code");
+    }
+    if (is_write_function(info.function_code)) {
+        analysis.warnings.push_back("Write function used");
+    }
+}
+
+void ModbusDeepAnalyzer::analyze_access_patterns(const ModbusInfo& info, ModbusSecurityAnalysis& analysis) const {
+    if (is_unusual_register_access(info.start_address, info.quantity)) {
+        analysis.abnormal_traffic_pattern = true;
+        analysis.vulnerabilities.push_back("Unusual register access pattern");
+    }
+    if (detect_unauthorized_access(info)) {
+        analysis.unauthorized_access = true;
+        analysis.vulnerabilities.push_back("Unauthorized access pattern");
+    }
+}
+
+void ModbusDeepAnalyzer::check_for_attacks(const ModbusInfo& info, ModbusSecurityAnalysis& analysis) const {
+    if (detect_replay_attack(info)) {
+        analysis.potential_replay_attack = true;
+        analysis.vulnerabilities.push_back("Potential replay attack");
+    }
+    if (detect_dos_attempt(info)) {
+        analysis.potential_dos_attack = true;
+        analysis.vulnerabilities.push_back("Potential denial-of-service pattern");
+    }
+}
+
+bool ModbusDeepAnalyzer::is_suspicious_function_code(ModbusFunctionCode fc) const {
+    uint8_t function_code = static_cast<uint8_t>(fc);
+    return !is_valid_function_code(function_code) ||
+           function_code == static_cast<uint8_t>(ModbusFunctionCode::DIAGNOSTICS) ||
+           function_code == static_cast<uint8_t>(ModbusFunctionCode::ENCAPSULATED_INTERFACE_TRANSPORT);
+}
+
+bool ModbusDeepAnalyzer::is_high_frequency_request(uint8_t slave_id) const {
+    auto now = std::chrono::steady_clock::now();
+    size_t count = 0;
+
+    for (const auto& attempt : scan_attempts_) {
+        if (attempt.unit_id == slave_id && now - attempt.timestamp <= std::chrono::seconds(1)) {
+            ++count;
+        }
+    }
+
+    return count > MAX_REQUESTS_PER_SECOND;
+}
+
+bool ModbusDeepAnalyzer::is_unusual_register_access(uint16_t start_addr, uint16_t count) const {
+    if (count > MAX_REGISTER_COUNT) {
+        return true;
+    }
+
+    uint32_t end_addr = static_cast<uint32_t>(start_addr) + count;
+    return end_addr > 10000 || is_critical_address(start_addr);
+}
+
+std::string ModbusDeepAnalyzer::get_exception_name(ModbusExceptionCode code) const {
+    uint8_t raw_code = static_cast<uint8_t>(code);
+    auto it = exception_codes_.find(raw_code);
+    return it != exception_codes_.end() ? it->second : "Unknown Exception";
+}
+
+std::string ModbusDeepAnalyzer::get_variant_name(ModbusVariant variant) const {
+    switch (variant) {
+        case ModbusVariant::RTU: return "RTU";
+        case ModbusVariant::ASCII: return "ASCII";
+        case ModbusVariant::TCP: return "TCP";
+        case ModbusVariant::UDP: return "UDP";
+    }
+
+    return "Unknown";
+}
+
+std::string ModbusDeepAnalyzer::generate_security_report() const {
+    auto stats = get_statistics();
+    std::stringstream report;
+
+    report << "=== Modbus安全统计报告 ===\n";
+    report << "总包数: " << stats.total_packets << "\n";
+    report << "读操作: " << stats.read_operations << "\n";
+    report << "写操作: " << stats.write_operations << "\n";
+    report << "异常响应: " << stats.exception_count << "\n";
+    report << "异常事件: " << stats.anomaly_count << "\n";
+    report << "扫描尝试: " << stats.scan_attempts << "\n";
+
+    return report.str();
+}
+
+std::string ModbusDeepAnalyzer::generate_device_report() const {
+    auto devices = get_known_devices();
+    std::stringstream report;
+
+    report << "=== Modbus设备报告 ===\n";
+    report << "设备数量: " << devices.size() << "\n";
+    for (const auto& device : devices) {
+        report << "Slave ID: " << static_cast<int>(device.slave_id)
+               << ", 状态: " << (device.is_online ? "online" : "offline")
+               << ", 消息数: " << device.message_count
+               << ", 错误率: " << std::fixed << std::setprecision(2) << device.get_error_rate() << "\n";
+    }
+
     return report.str();
 }
 

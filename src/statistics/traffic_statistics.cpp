@@ -4,7 +4,6 @@
 #include <iomanip>
 #include <fstream>
 #include <thread>
-#include <execution>
 
 namespace ProtocolParser::Statistics {
 
@@ -82,7 +81,7 @@ std::vector<std::pair<std::string, ProtocolStats>> TrafficStatistics::get_all_st
     }
     
     // 按协议名称排序以保证一致性
-    std::sort(std::execution::par_unseq, result.begin(), result.end(),
+    std::sort(result.begin(), result.end(),
               [](const auto& a, const auto& b) { return a.first < b.first; });
     
     return result;

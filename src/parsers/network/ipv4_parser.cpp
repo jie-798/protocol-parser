@@ -90,6 +90,7 @@ bool IPv4Parser::can_parse(const core::BufferView& buffer) const noexcept {
 }
 
 ParseResult IPv4Parser::parse(ParseContext& context) noexcept {
+    reset();
     context.state = ParserState::Parsing;
     
     // 执行状态机直到完成或出错

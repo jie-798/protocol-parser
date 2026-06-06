@@ -1,31 +1,35 @@
 #include "parsers/application/dhcp_parser.hpp"
-#include <cstring>
 #include <algorithm>
+#include <cstring>
 #include <iomanip>
 #include <sstream>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#else
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#endif
+namespace {
+uint16_t read_be16(const uint8_t* data) noexcept {
+    return (static_cast<uint16_t>(data[0]) << 8) | data[1];
+}
+
+uint32_t read_be32(const uint8_t* data) noexcept {
+    return (static_cast<uint32_t>(data[0]) << 24) |
+           (static_cast<uint32_t>(data[1]) << 16) |
+           (static_cast<uint32_t>(data[2]) << 8) |
+           data[3];
+}
+}
 
 namespace ProtocolParser::Parsers::Application {
 
 // DHCPOption 方法实现
 uint32_t DHCPOption::as_uint32() const noexcept {
     if (data.size() >= 4) {
-        return ntohl(*reinterpret_cast<const uint32_t*>(data.data()));
+        return read_be32(data.data());
     }
     return 0;
 }
 
 uint16_t DHCPOption::as_uint16() const noexcept {
     if (data.size() >= 2) {
-        return ntohs(*reinterpret_cast<const uint16_t*>(data.data()));
+        return read_be16(data.data());
     }
     return 0;
 }
@@ -41,7 +45,7 @@ std::string DHCPOption::as_string() const {
 std::vector<uint32_t> DHCPOption::as_ip_list() const {
     std::vector<uint32_t> ips;
     for (size_t i = 0; i + 3 < data.size(); i += 4) {
-        ips.push_back(ntohl(*reinterpret_cast<const uint32_t*>(&data[i])));
+        ips.push_back(read_be32(&data[i]));
     }
     return ips;
 }
@@ -304,9 +308,10 @@ void DHCPParser::reset_statistics() noexcept {
 }
 
 std::string DHCPParser::ip_to_string(uint32_t ip) noexcept {
-    struct sockaddr_in addr;
-    addr.sin_addr.s_addr = htonl(ip);
-    return inet_ntoa(addr.sin_addr);
+    return std::to_string((ip >> 24) & 0xFF) + "." +
+           std::to_string((ip >> 16) & 0xFF) + "." +
+           std::to_string((ip >> 8) & 0xFF) + "." +
+           std::to_string(ip & 0xFF);
 }
 
 std::string DHCPParser::mac_to_string(const std::array<uint8_t, 16>& mac, uint8_t len) noexcept {
@@ -348,7 +353,7 @@ std::string DHCPParser::message_type_to_string(DHCPOpcode type) noexcept {
 }
 
 bool DHCPParser::is_valid_magic_cookie(const uint8_t* data) noexcept {
-    const uint32_t cookie = ntohl(*reinterpret_cast<const uint32_t*>(data));
+    const uint32_t cookie = read_be32(data);
     return cookie == DHCP_MAGIC_COOKIE;
 }
 
@@ -365,25 +370,25 @@ bool DHCPParser::parse_header(const uint8_t* data, size_t size) noexcept {
     dhcp_message_.header.hlen = *ptr++;
     dhcp_message_.header.hops = *ptr++;
     
-    dhcp_message_.header.xid = ntohl(*reinterpret_cast<const uint32_t*>(ptr));
+    dhcp_message_.header.xid = read_be32(ptr);
     ptr += 4;
     
-    dhcp_message_.header.secs = ntohs(*reinterpret_cast<const uint16_t*>(ptr));
+    dhcp_message_.header.secs = read_be16(ptr);
     ptr += 2;
     
-    dhcp_message_.header.flags = ntohs(*reinterpret_cast<const uint16_t*>(ptr));
+    dhcp_message_.header.flags = read_be16(ptr);
     ptr += 2;
     
-    dhcp_message_.header.ciaddr = ntohl(*reinterpret_cast<const uint32_t*>(ptr));
+    dhcp_message_.header.ciaddr = read_be32(ptr);
     ptr += 4;
     
-    dhcp_message_.header.yiaddr = ntohl(*reinterpret_cast<const uint32_t*>(ptr));
+    dhcp_message_.header.yiaddr = read_be32(ptr);
     ptr += 4;
     
-    dhcp_message_.header.siaddr = ntohl(*reinterpret_cast<const uint32_t*>(ptr));
+    dhcp_message_.header.siaddr = read_be32(ptr);
     ptr += 4;
     
-    dhcp_message_.header.giaddr = ntohl(*reinterpret_cast<const uint32_t*>(ptr));
+    dhcp_message_.header.giaddr = read_be32(ptr);
     ptr += 4;
     
     // 复制硬件地址

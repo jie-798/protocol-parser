@@ -2,14 +2,17 @@
 
 #include <atomic>
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 #include <string>
 #include <mutex>
 #include <shared_mutex>
 #include <span>
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 
 namespace ProtocolParser::Statistics {
@@ -30,8 +33,24 @@ enum class MetricType : uint8_t {
 // 原子度量值类 - 高性能无锁设计
 class alignas(64) AtomicMetric {
 public:
-    explicit constexpr AtomicMetric(MetricType type = MetricType::COUNTER) noexcept 
+    explicit constexpr AtomicMetric(MetricType type = MetricType::COUNTER) noexcept
         : type_(type), value_(0), count_(0), sum_squares_(0) {}
+
+    AtomicMetric(const AtomicMetric& other) noexcept
+        : type_(other.type_),
+          value_(other.value()),
+          count_(other.count()),
+          sum_squares_(other.sum_squares_.load(std::memory_order_relaxed)) {}
+
+    AtomicMetric& operator=(const AtomicMetric& other) noexcept {
+        if (this != &other) {
+            type_ = other.type_;
+            value_.store(other.value(), std::memory_order_relaxed);
+            count_.store(other.count(), std::memory_order_relaxed);
+            sum_squares_.store(other.sum_squares_.load(std::memory_order_relaxed), std::memory_order_relaxed);
+        }
+        return *this;
+    }
 
     // 原子操作 - 高性能实现
     void increment(uint64_t delta = 1) noexcept {
@@ -91,7 +110,7 @@ public:
     }
 
 private:
-    const MetricType type_;
+    MetricType type_;
     std::atomic<uint64_t> value_;       // 主要值
     std::atomic<uint64_t> count_;       // 观察次数
     std::atomic<uint64_t> sum_squares_; // 平方和（用于方差计算）
@@ -219,7 +238,8 @@ template<TimestampType T>
 void TrafficStatistics::record_batch(
     std::span<const std::pair<std::string, size_t>> packets,
     std::chrono::time_point<std::chrono::high_resolution_clock, std::chrono::duration<T>> timestamp) noexcept {
-    
+
+    (void)timestamp;
     const auto batch_start = std::chrono::high_resolution_clock::now();
     
     // 批量处理以提高性能
@@ -232,16 +252,13 @@ void TrafficStatistics::record_batch(
     }
     
     // 原子批量更新
-    {
-        std::shared_lock lock(stats_mutex_);
-        for (const auto& [protocol, stats_pair] : batch_stats) {
-            auto& proto_stats = get_or_create_stats(protocol);
-            proto_stats.packet_count.increment(stats_pair.first);
-            proto_stats.byte_count.increment(stats_pair.second);
-            
-            total_packet_count_.fetch_add(stats_pair.first, std::memory_order_relaxed);
-            total_byte_count_.fetch_add(stats_pair.second, std::memory_order_relaxed);
-        }
+    for (const auto& [protocol, stats_pair] : batch_stats) {
+        auto& proto_stats = get_or_create_stats(protocol);
+        proto_stats.packet_count.increment(stats_pair.first);
+        proto_stats.byte_count.increment(stats_pair.second);
+
+        total_packet_count_.fetch_add(stats_pair.first, std::memory_order_relaxed);
+        total_byte_count_.fetch_add(stats_pair.second, std::memory_order_relaxed);
     }
     
     const auto batch_duration = std::chrono::high_resolution_clock::now() - batch_start;

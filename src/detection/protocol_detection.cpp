@@ -401,9 +401,86 @@ DetectionResult ProtocolDetectionEngine::detect_protocol_with_ports(const protoc
     return final_result;
 }
 
+std::vector<DetectionResult> ProtocolDetectionEngine::detect_multiple(
+    std::span<const protocol_parser::core::BufferView> buffers) const noexcept {
+
+    std::vector<DetectionResult> results;
+    results.reserve(buffers.size());
+
+    for (const auto& buffer : buffers) {
+        results.push_back(detect_protocol(buffer));
+    }
+
+    return results;
+}
+
+DetectionResult ProtocolDetectionEngine::detect_flow_protocol(
+    const std::string& flow_id,
+    const std::vector<protocol_parser::core::BufferView>& packets,
+    uint16_t src_port,
+    uint16_t dst_port) const {
+
+    std::vector<DetectionResult> results;
+
+    if (config_.use_port_based) {
+        auto port_results = port_detector_->detect_by_port(src_port, dst_port);
+        results.insert(results.end(), port_results.begin(), port_results.end());
+    }
+
+    for (const auto& packet : packets) {
+        if (config_.enable_flow_analysis) {
+            deep_inspector_->update_flow_state(flow_id, packet);
+        }
+        auto packet_result = detect_protocol(packet);
+        if (!packet_result.protocol_name.empty()) {
+            results.push_back(packet_result);
+        }
+    }
+
+    if (config_.enable_flow_analysis) {
+        auto flow_results = deep_inspector_->analyze_flow(flow_id);
+        results.insert(results.end(), flow_results.begin(), flow_results.end());
+    }
+
+    return combine_results(results);
+}
+
 void ProtocolDetectionEngine::add_signature(const ProtocolSignature& signature) {
     std::unique_lock lock(signatures_mutex_);
     signatures_[signature.protocol_name] = signature;
+}
+
+void ProtocolDetectionEngine::remove_signature(const std::string& protocol_name) {
+    std::unique_lock lock(signatures_mutex_);
+    signatures_.erase(protocol_name);
+}
+
+void ProtocolDetectionEngine::enable_detector(const std::string& detector_name) {
+    if (detector_name == "port" || detector_name == "port_based") {
+        config_.use_port_based = true;
+    } else if (detector_name == "signature" || detector_name == "signature_based") {
+        config_.use_signature_based = true;
+    } else if (detector_name == "heuristic" || detector_name == "heuristic_based") {
+        config_.use_heuristic_based = true;
+    } else if (detector_name == "deep" || detector_name == "deep_inspection") {
+        config_.use_deep_inspection = true;
+    } else if (detector_name == "flow" || detector_name == "flow_analysis") {
+        config_.enable_flow_analysis = true;
+    }
+}
+
+void ProtocolDetectionEngine::disable_detector(const std::string& detector_name) {
+    if (detector_name == "port" || detector_name == "port_based") {
+        config_.use_port_based = false;
+    } else if (detector_name == "signature" || detector_name == "signature_based") {
+        config_.use_signature_based = false;
+    } else if (detector_name == "heuristic" || detector_name == "heuristic_based") {
+        config_.use_heuristic_based = false;
+    } else if (detector_name == "deep" || detector_name == "deep_inspection") {
+        config_.use_deep_inspection = false;
+    } else if (detector_name == "flow" || detector_name == "flow_analysis") {
+        config_.enable_flow_analysis = false;
+    }
 }
 
 void ProtocolDetectionEngine::configure(const DetectionConfig& config) {
@@ -427,15 +504,67 @@ void ProtocolDetectionEngine::reset_statistics() noexcept {
 std::vector<std::string> ProtocolDetectionEngine::get_supported_protocols() const noexcept {
     std::vector<std::string> protocols;
     std::shared_lock lock(signatures_mutex_);
-    
+
     for (const auto& [name, _] : signatures_) {
         protocols.push_back(name);
     }
-    
+
     return protocols;
 }
 
+std::vector<std::string> ProtocolDetectionEngine::suggest_protocols(const protocol_parser::core::BufferView& buffer) const noexcept {
+    std::vector<std::string> suggestions;
+    const auto result = detect_protocol(buffer);
+
+    if (!result.protocol_name.empty() && result.confidence_score >= config_.min_confidence_threshold) {
+        suggestions.push_back(result.protocol_name);
+    }
+
+    return suggestions;
+}
+
+std::pair<DetectionResult, ProtocolDetectionEngine::DetectionTrace> ProtocolDetectionEngine::detect_with_trace(
+    const protocol_parser::core::BufferView& buffer) const {
+
+    DetectionTrace trace;
+    const auto start_time = std::chrono::high_resolution_clock::now();
+    trace.detection_steps.push_back("start");
+
+    auto result = detect_protocol(buffer);
+    trace.scorer_results.emplace_back(result.protocol_name, result.confidence_score);
+    trace.final_decision_reason = result.protocol_name.empty() ? "no protocol matched" : "best confidence score";
+
+    const auto end_time = std::chrono::high_resolution_clock::now();
+    trace.detection_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
+    trace.detection_steps.push_back("finish");
+
+    return {result, trace};
+}
+
 // 私有方法实现
+double ProtocolDetectionEngine::calculate_combined_confidence(const std::vector<DetectionResult>& results) const noexcept {
+    double combined = 0.0;
+
+    for (const auto& result : results) {
+        combined = std::max(combined, result.confidence_score);
+    }
+
+    return combined;
+}
+
+std::string ProtocolDetectionEngine::select_best_protocol(const std::vector<DetectionResult>& results) const noexcept {
+    if (results.empty()) {
+        return {};
+    }
+
+    const auto best = std::max_element(results.begin(), results.end(),
+        [](const DetectionResult& lhs, const DetectionResult& rhs) {
+            return lhs.confidence_score < rhs.confidence_score;
+        });
+
+    return best->protocol_name;
+}
+
 DetectionResult ProtocolDetectionEngine::combine_results(const std::vector<DetectionResult>& results) const noexcept {
     if (results.empty()) {
         return DetectionResult{};
@@ -559,6 +688,17 @@ ConfidenceLevel ProtocolDetectionEngine::score_to_confidence_level(double score)
     if (score >= 0.4) return ConfidenceLevel::MEDIUM;
     if (score >= 0.2) return ConfidenceLevel::LOW;
     return ConfidenceLevel::VERY_LOW;
+}
+
+std::string ProtocolDetectionEngine::confidence_level_to_string(ConfidenceLevel level) noexcept {
+    switch (level) {
+        case ConfidenceLevel::VERY_LOW: return "very_low";
+        case ConfidenceLevel::LOW: return "low";
+        case ConfidenceLevel::MEDIUM: return "medium";
+        case ConfidenceLevel::HIGH: return "high";
+        case ConfidenceLevel::VERY_HIGH: return "very_high";
+        default: return "unknown";
+    }
 }
 
 // 简化的其他类实现

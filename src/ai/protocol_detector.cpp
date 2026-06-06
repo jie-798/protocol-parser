@@ -1,9 +1,12 @@
 #include "ai/protocol_detector.hpp"
+
 #include <algorithm>
+#include <cctype>
 #include <cmath>
+#include <limits>
+#include <numeric>
 #include <random>
 #include <sstream>
-#include <numeric>
 
 namespace protocol_parser::ai {
 
@@ -74,7 +77,7 @@ bool AIProtocolDetector::is_suspicious_domain(const std::string& domain) const {
     
     // 检查随机字符比例
     size_t random_chars = 0;
-    for (char c : domain) {
+    for (unsigned char c : domain) {
         if (std::isalnum(c) && std::isdigit(c)) {
             random_chars++;
         }

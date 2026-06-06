@@ -1,7 +1,12 @@
 #include "detection/protocol_detector.hpp"
+#include "parsers/application/sip_parser.hpp"
+#include "parsers/transport/quic_parser.hpp"
+#include "parsers/transport/rtp_parser.hpp"
+
 #include <algorithm>
-#include <cstring>
 #include <cctype>
+#include <cmath>
+#include <cstring>
 
 namespace protocol_parser::detection {
 
@@ -151,15 +156,15 @@ void ProtocolDetector::init_port_mappings() {
     port_mappings_.push_back({5060, ProtocolType::SIP, false});  // SIP 也支持 UDP
 }
 
-DetectionResult ProtocolDetector::detect(
+ProtocolDetectorResult ProtocolDetector::detect(
     uint32_t src_ip,
     uint32_t dst_ip,
     uint16_t src_port,
     uint16_t dst_port,
-    const BufferView& payload,
+    const core::BufferView& payload,
     bool is_tcp) {
 
-    DetectionResult result;
+    ProtocolDetectorResult result;
     stats_.total_detections++;
 
     // 阶段 1: 端口识别（最快）
@@ -213,14 +218,14 @@ DetectionResult ProtocolDetector::detect(
     return result;
 }
 
-std::optional<DetectionResult> ProtocolDetector::detect_by_port(
+std::optional<ProtocolDetectorResult> ProtocolDetector::detect_by_port(
     uint16_t port,
     bool is_tcp) const {
 
     // 查找端口映射
     for (const auto& mapping : port_mappings_) {
         if (mapping.port == port && mapping.is_tcp == is_tcp) {
-            DetectionResult result;
+            ProtocolDetectorResult result;
             result.protocol = mapping.protocol;
             result.confidence = Confidence::High;  // 端口识别置信度高
             result.protocol_name = get_protocol_name(mapping.protocol);
@@ -232,35 +237,29 @@ std::optional<DetectionResult> ProtocolDetector::detect_by_port(
     return std::nullopt;
 }
 
-std::optional<DetectionResult> ProtocolDetector::detect_by_signature(
-    const BufferView& payload) const {
+std::optional<ProtocolDetectorResult> ProtocolDetector::detect_by_signature(
+    const core::BufferView& payload) const {
 
     if (payload.empty()) {
         return std::nullopt;
     }
 
     // 遍历所有协议特征
-    for (const auto& [protocol, signatures] : signatures_) {
-        auto range = signatures.equal_range(protocol);
-
-        for (auto it = range.first; it != range.second; ++it) {
-            const auto& sig = it->second;
-
-            if (check_pattern(payload, sig)) {
-                DetectionResult result;
-                result.protocol = protocol;
-                result.confidence = Confidence::High;
-                result.protocol_name = get_protocol_name(protocol);
-                result.by_signature = true;
-                result.details = "Matched signature: " + sig.string_pattern;
-                return result;
-            }
+    for (const auto& [protocol, sig] : signatures_) {
+        if (check_pattern(payload, sig)) {
+            ProtocolDetectorResult result;
+            result.protocol = protocol;
+            result.confidence = Confidence::High;
+            result.protocol_name = get_protocol_name(protocol);
+            result.by_signature = true;
+            result.details = "Matched signature: " + sig.string_pattern;
+            return result;
         }
     }
 
     // 特殊检查：QUIC
     if (parsers::QuicParser::is_quic_packet(payload)) {
-        DetectionResult result;
+        ProtocolDetectorResult result;
         result.protocol = ProtocolType::QUIC;
         result.confidence = Confidence::High;
         result.protocol_name = "QUIC";
@@ -270,7 +269,7 @@ std::optional<DetectionResult> ProtocolDetector::detect_by_signature(
 
     // 特殊检查：SIP
     if (parsers::SipParser::is_sip_message(payload)) {
-        DetectionResult result;
+        ProtocolDetectorResult result;
         result.protocol = ProtocolType::SIP;
         result.confidence = Confidence::High;
         result.protocol_name = "SIP";
@@ -280,7 +279,7 @@ std::optional<DetectionResult> ProtocolDetector::detect_by_signature(
 
     // 特殊检查：RTP/RTCP
     if (parsers::RtpParser::is_rtp_packet(payload)) {
-        DetectionResult result;
+        ProtocolDetectorResult result;
         result.protocol = ProtocolType::RTP;
         result.confidence = Confidence::High;
         result.protocol_name = "RTP";
@@ -291,9 +290,9 @@ std::optional<DetectionResult> ProtocolDetector::detect_by_signature(
     return std::nullopt;
 }
 
-std::optional<DetectionResult> ProtocolDetector::detect_by_behavior(
+std::optional<ProtocolDetectorResult> ProtocolDetector::detect_by_behavior(
     const FlowKey& key,
-    const BufferView& payload) {
+    const core::BufferView& payload) {
 
     auto it = flow_states_.find(key);
     if (it == flow_states_.end()) {
@@ -323,7 +322,7 @@ std::optional<DetectionResult> ProtocolDetector::detect_by_behavior(
 
         // 高熵值可能是加密流量
         if (entropy > 7.5) {
-            DetectionResult result;
+            ProtocolDetectorResult result;
             result.protocol = ProtocolType::TLS;  // 猜测是 TLS
             result.confidence = Confidence::Medium;
             result.protocol_name = "Encrypted (likely TLS)";
@@ -335,7 +334,7 @@ std::optional<DetectionResult> ProtocolDetector::detect_by_behavior(
 
     // 小包频繁交互可能是控制协议
     if (state.packet_count > 10 && state.byte_count < state.packet_count * 100) {
-        DetectionResult result;
+        ProtocolDetectorResult result;
         result.protocol = ProtocolType::SSH;  // 猜测是 SSH
         result.confidence = Confidence::Low;
         result.protocol_name = "Likely SSH (small packets)";
@@ -346,9 +345,9 @@ std::optional<DetectionResult> ProtocolDetector::detect_by_behavior(
     return std::nullopt;
 }
 
-std::optional<DetectionResult> ProtocolDetector::detect_by_ml(
+std::optional<ProtocolDetectorResult> ProtocolDetector::detect_by_ml(
     const FlowKey& key,
-    const BufferView& payload) {
+    const core::BufferView& payload) {
 
     // 简化的机器学习模型（实际应用中应使用训练好的模型）
     // 这里使用简单的启发式规则
@@ -367,7 +366,7 @@ std::optional<DetectionResult> ProtocolDetector::detect_by_ml(
 
     // 简单的决策树
     if (avg_packet_size < 100 && ratio > 2.0) {
-        DetectionResult result;
+        ProtocolDetectorResult result;
         result.protocol = ProtocolType::HTTP;
         result.confidence = Confidence::Low;
         result.protocol_name = "Likely HTTP (ML)";
@@ -379,8 +378,8 @@ std::optional<DetectionResult> ProtocolDetector::detect_by_ml(
 }
 
 bool ProtocolDetector::check_pattern(
-    const BufferView& payload,
-    const ProtocolSignature& sig) const {
+    const core::BufferView& payload,
+    const ProtocolDetectorSignature& sig) const {
 
     if (sig.pattern.empty() && !sig.string_pattern.empty()) {
         return check_string_pattern(payload, sig.string_pattern);
@@ -401,7 +400,7 @@ bool ProtocolDetector::check_pattern(
 }
 
 bool ProtocolDetector::check_string_pattern(
-    const BufferView& payload,
+    const core::BufferView& payload,
     const std::string& pattern) const {
 
     if (pattern.size() > payload.size()) {
@@ -409,14 +408,11 @@ bool ProtocolDetector::check_string_pattern(
     }
 
     // 检查字符串模式（不区分大小写）
-    std::string_view payload_sv(reinterpret_cast<const char*>(payload.data()),
-                                payload.size());
     std::string pattern_lower = pattern;
     std::transform(pattern_lower.begin(), pattern_lower.end(),
                   pattern_lower.begin(), ::tolower);
 
     // 查找模式
-    size_t pos = 0;
     for (size_t i = 0; i <= payload.size() - pattern.size(); ++i) {
         bool match = true;
         for (size_t j = 0; j < pattern.size(); ++j) {
@@ -492,7 +488,7 @@ void ProtocolDetector::cleanup_old_flows(uint64_t current_time_ms, uint64_t time
     }
 }
 
-void ProtocolDetector::add_signature(ProtocolType protocol, const ProtocolSignature& signature) {
+void ProtocolDetector::add_signature(ProtocolType protocol, const ProtocolDetectorSignature& signature) {
     signatures_.insert({protocol, signature});
 }
 

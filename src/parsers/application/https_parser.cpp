@@ -333,30 +333,42 @@ bool HTTPSParser::parse_certificate(const uint8_t* data, size_t length, std::vec
 
 bool HTTPSParser::parse_extensions(const uint8_t* data, size_t length, std::vector<TLSExtension>& extensions) {
     size_t offset = 0;
-    
+
     while (offset + 4 <= length) {
         TLSExtension extension;
-        
-        extension.type = read_uint16(data + offset);
-        extension.length = read_uint16(data + offset + 2);
-        offset += 4;
-        
-        if (offset + extension.length > length) {
+        const size_t extension_total_length = 4 + read_uint16(data + offset + 2);
+        if (offset + extension_total_length > length) {
             break;
         }
-        
-        extension.data.assign(data + offset, data + offset + extension.length);
-        extension.name = extension_type_to_string(extension.type);
-        
-        // Parse specific extensions
-        if (extension.type == 0) {  // Server Name Indication
+
+        if (!parse_extension(data + offset, extension_total_length, extension)) {
+            break;
+        }
+
+        if (extension.type == 0) {
             current_session_.server_name = parse_server_name_extension(extension.data);
         }
-        
+
         extensions.push_back(extension);
-        offset += extension.length;
+        offset += extension_total_length;
     }
-    
+
+    return true;
+}
+
+bool HTTPSParser::parse_extension(const uint8_t* data, size_t length, TLSExtension& extension) {
+    if (length < 4) {
+        return false;
+    }
+
+    extension.type = read_uint16(data);
+    extension.length = read_uint16(data + 2);
+    if (length < 4 + extension.length) {
+        return false;
+    }
+
+    extension.data.assign(data + 4, data + 4 + extension.length);
+    extension.name = extension_type_to_string(extension.type);
     return true;
 }
 
@@ -541,13 +553,16 @@ uint32_t HTTPSParser::read_uint32(const uint8_t* data) {
 Certificate HTTPSParser::parse_x509_certificate(const uint8_t* data, size_t length) {
     Certificate cert;
     cert.raw_data.assign(data, data + length);
-    
-    // Basic X.509 parsing would go here
-    // For now, just store the raw data
-    cert.subject = "[Certificate parsing not implemented]";
-    cert.issuer = "[Certificate parsing not implemented]";
-    
+    cert.subject = extract_certificate_field(data, length, "subject");
+    cert.issuer = extract_certificate_field(data, length, "issuer");
+
     return cert;
+}
+
+std::string HTTPSParser::extract_certificate_field(const uint8_t* data, size_t length, const std::string& field) {
+    (void)data;
+    (void)length;
+    return "[" + field + " parsing not implemented]";
 }
 
 void HTTPSParser::initialize_cipher_suites() {

@@ -2,6 +2,7 @@
 
 #include "parsers/base_parser.hpp"
 #include "core/buffer_view.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -63,7 +64,7 @@ enum class Confidence : uint8_t {
 /**
  * 协议识别结果
  */
-struct DetectionResult {
+struct ProtocolDetectorResult {
     ProtocolType protocol = ProtocolType::Unknown;
     Confidence confidence = Confidence::Low;
     std::string protocol_name;
@@ -82,7 +83,7 @@ struct DetectionResult {
 /**
  * 协议特征
  */
-struct ProtocolSignature {
+struct ProtocolDetectorSignature {
     std::vector<uint8_t> pattern;           // 字节模式
     size_t offset;                          // 偏移位置
     bool is_request;                        // 是请求还是响应
@@ -150,12 +151,12 @@ public:
      * @param is_tcp 是否是 TCP
      * @return 检测结果
      */
-    [[nodiscard]] DetectionResult detect(
+    [[nodiscard]] ProtocolDetectorResult detect(
         uint32_t src_ip,
         uint32_t dst_ip,
         uint16_t src_port,
         uint16_t dst_port,
-        const BufferView& payload,
+        const core::BufferView& payload,
         bool is_tcp
     );
 
@@ -194,7 +195,7 @@ public:
     /**
      * 添加自定义协议特征
      */
-    void add_signature(ProtocolType protocol, const ProtocolSignature& signature);
+    void add_signature(ProtocolType protocol, const ProtocolDetectorSignature& signature);
 
     /**
      * 添加端口映射
@@ -228,37 +229,37 @@ private:
     };
 
     // 阶段 1: 端口识别
-    [[nodiscard]] std::optional<DetectionResult> detect_by_port(
+    [[nodiscard]] std::optional<ProtocolDetectorResult> detect_by_port(
         uint16_t port,
         bool is_tcp
     ) const;
 
     // 阶段 2: 特征匹配
-    [[nodiscard]] std::optional<DetectionResult> detect_by_signature(
-        const BufferView& payload
+    [[nodiscard]] std::optional<ProtocolDetectorResult> detect_by_signature(
+        const core::BufferView& payload
     ) const;
 
     // 阶段 3: 行为分析
-    [[nodiscard]] std::optional<DetectionResult> detect_by_behavior(
+    [[nodiscard]] std::optional<ProtocolDetectorResult> detect_by_behavior(
         const FlowKey& key,
-        const BufferView& payload
+        const core::BufferView& payload
     );
 
     // 阶段 4: 机器学习分类（简化版）
-    [[nodiscard]] std::optional<DetectionResult> detect_by_ml(
+    [[nodiscard]] std::optional<ProtocolDetectorResult> detect_by_ml(
         const FlowKey& key,
-        const BufferView& payload
+        const core::BufferView& payload
     );
 
     // 辅助函数：检查字节模式
     [[nodiscard]] bool check_pattern(
-        const BufferView& payload,
-        const ProtocolSignature& sig
+        const core::BufferView& payload,
+        const ProtocolDetectorSignature& sig
     ) const;
 
     // 辅助函数：检查字符串模式
     [[nodiscard]] bool check_string_pattern(
-        const BufferView& payload,
+        const core::BufferView& payload,
         const std::string& pattern
     ) const;
 
@@ -269,7 +270,7 @@ private:
     void init_port_mappings();
 
     // 特征库
-    std::multimap<ProtocolType, ProtocolSignature> signatures_;
+    std::multimap<ProtocolType, ProtocolDetectorSignature> signatures_;
 
     // 端口映射
     std::vector<PortMapping> port_mappings_;

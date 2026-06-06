@@ -5,12 +5,6 @@
 #include <cstring>
 #include <regex>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#else
-#include <arpa/inet.h>
-#endif
-
 // 简化的SHA1和Base64实现（生产环境应使用标准库）
 namespace {
     // Base64编码表
@@ -241,7 +235,7 @@ ParseResult WebSocketParser::parse_frame(const protocol_parser::core::BufferView
         case WebSocketOpcode::CLOSE:
             if (frame.payload.size() >= 2) {
                 frame.close_code = static_cast<WebSocketCloseCode>(
-                    ntohs(*reinterpret_cast<const uint16_t*>(frame.payload.data())));
+                    (static_cast<uint16_t>(frame.payload[0]) << 8) | frame.payload[1]);
                 if (frame.payload.size() > 2) {
                     frame.close_reason = std::string(frame.payload.begin() + 2, frame.payload.end());
                     if (!is_valid_utf8(std::vector<uint8_t>(frame.payload.begin() + 2, frame.payload.end()))) {
@@ -391,7 +385,7 @@ bool WebSocketParser::validate_frame(const WebSocketFrame& frame) const {
             return false; // 关闭码必须是2字节
         }
         if (frame.payload.size() >= 2) {
-            uint16_t code = ntohs(*reinterpret_cast<const uint16_t*>(frame.payload.data()));
+            uint16_t code = (static_cast<uint16_t>(frame.payload[0]) << 8) | frame.payload[1];
             // 检查关闭码是否有效
             if (code < 1000 || (code >= 1004 && code <= 1006) || 
                 (code >= 1012 && code <= 1014) || code == 1100) {
@@ -542,7 +536,7 @@ ParseResult WebSocketParser::parse_frame_header(const protocol_parser::core::Buf
         if (offset + 4 > buffer.size()) {
             return ParseResult::NeedMoreData;
         }
-        header.masking_key = *reinterpret_cast<const uint32_t*>(buffer.data() + offset);
+        header.masking_key = buffer.read_be32(offset);
         offset += 4;
     }
     
@@ -565,16 +559,13 @@ size_t WebSocketParser::parse_payload_length(const protocol_parser::core::Buffer
         if (offset + 2 > buffer.size()) {
             return 0;
         }
-        length = ntohs(*reinterpret_cast<const uint16_t*>(buffer.data() + offset));
+        length = buffer.read_be16(offset);
         return 2;
     } else { // initial_length == 127
         if (offset + 8 > buffer.size()) {
             return 0;
         }
-#ifndef be64toh
-#define be64toh(x) _byteswap_uint64(x)
-#endif
-        length = be64toh(*reinterpret_cast<const uint64_t*>(buffer.data() + offset));
+        length = buffer.read_be64(offset);
         return 8;
     }
 }

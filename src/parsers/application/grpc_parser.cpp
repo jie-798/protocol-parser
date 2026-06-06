@@ -4,15 +4,6 @@
 #include <string>
 #include <cstring>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#ifndef be64toh
-#define be64toh(x) _byteswap_uint64(x)
-#endif
-#else
-#include <arpa/inet.h>
-#endif
-
 namespace ProtocolParser::Parsers::Application {
 
 GRPCParser::GRPCParser() : BaseParser() {
@@ -81,7 +72,7 @@ bool GRPCParser::is_grpc_traffic(const protocol_parser::core::BufferView& buffer
     uint32_t length = (buffer[0] << 16) | (buffer[1] << 8) | buffer[2];
     uint8_t type = buffer[3];
     uint8_t flags = buffer[4];
-    uint32_t stream_id = ntohl(*reinterpret_cast<const uint32_t*>(buffer.data() + 5)) & 0x7FFFFFFF;
+    uint32_t stream_id = buffer.read_be32(5) & 0x7FFFFFFF;
     
     // 基本有效性检查
     if (length > MAX_FRAME_SIZE) {
@@ -295,7 +286,7 @@ ParseResult GRPCParser::parse_message_header(const protocol_parser::core::Buffer
     header.compressed = (flags & 0x01) != 0;
     
     // 接下来4字节是消息长度（大端序）
-    header.length = ntohl(*reinterpret_cast<const uint32_t*>(buffer.data() + 1));
+    header.length = buffer.read_be32(1);
     
     // 检测压缩类型（如果压缩）
     if (header.compressed && buffer.size() > 5) {
@@ -488,7 +479,7 @@ ParseResult GRPCParser::parse_frame_header(const protocol_parser::core::BufferVi
     header.flags = buffer[4];
     
     // 解析流ID（31位）
-    header.stream_id = ntohl(*reinterpret_cast<const uint32_t*>(buffer.data() + 5)) & 0x7FFFFFFF;
+    header.stream_id = buffer.read_be32(5) & 0x7FFFFFFF;
     
     return ParseResult::Success;
 }

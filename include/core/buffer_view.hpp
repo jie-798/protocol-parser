@@ -1,12 +1,13 @@
 #pragma once
 
+#include <atomic>
+#include <bit>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <atomic>
 #include <span>
 #include <string_view>
 #include <type_traits>
-#include <immintrin.h>  // SIMD支持
 
 namespace protocol_parser::core {
 
@@ -117,22 +118,25 @@ T BufferView::parse_int(size_type offset) const noexcept {
 template<typename T>
 T BufferView::read_be(size_type offset) const noexcept {
     static_assert(std::is_integral_v<T>, "T must be integral type");
-    
+
     T value = parse_int<T>(offset);
-    if constexpr (sizeof(T) == 2) {
-        return _byteswap_ushort(value);
-    } else if constexpr (sizeof(T) == 4) {
-        return _byteswap_ulong(value);
-    } else if constexpr (sizeof(T) == 8) {
-        return _byteswap_uint64(value);
-    } else {
+    if constexpr (sizeof(T) == 1 || std::endian::native == std::endian::big) {
         return value;
+    } else {
+        return std::byteswap(value);
     }
 }
 
 template<typename T>
 T BufferView::read_le(size_type offset) const noexcept {
-    return parse_int<T>(offset);  // x86是小端序，直接返回
+    static_assert(std::is_integral_v<T>, "T must be integral type");
+
+    T value = parse_int<T>(offset);
+    if constexpr (sizeof(T) == 1 || std::endian::native == std::endian::little) {
+        return value;
+    } else {
+        return std::byteswap(value);
+    }
 }
 
 } // namespace protocol_parser::core

@@ -66,7 +66,19 @@ bool ICMPParser::can_parse(const core::BufferView& buffer) const noexcept {
 }
 
 ParseResult ICMPParser::parse(ParseContext& context) noexcept {
-    return state_machine_.execute(context);
+    reset();
+    context.state = ParserState::Parsing;
+
+    ParseResult result = ParseResult::Success;
+    while (state_machine_.current_state != ParserState::Complete &&
+           state_machine_.current_state != ParserState::Error) {
+        result = state_machine_.execute(context);
+        if (result != ParseResult::Success) {
+            break;
+        }
+    }
+
+    return result;
 }
 
 void ICMPParser::reset() noexcept {
@@ -133,6 +145,8 @@ ParseResult ICMPParser::parse_payload(ParseContext& context) noexcept {
         result_.checksum_valid = true; // 空载荷情况下认为校验和有效
     }
     
+    context.offset += remaining;
+    context.metadata["icmp_result"] = result_;
     state_machine_.set_state(ParserState::Complete);
     return ParseResult::Success;
 }

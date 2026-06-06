@@ -134,15 +134,11 @@ struct ARPParseResult {
     core::BufferView extra_data;    // 额外数据（如果有）
     size_t total_length = 0;        // 总长度
     
-    // 移动构造函数
+    ARPParseResult() = default;
+    ARPParseResult(const ARPParseResult&) = default;
+    ARPParseResult& operator=(const ARPParseResult&) = default;
     ARPParseResult(ARPParseResult&&) noexcept = default;
     ARPParseResult& operator=(ARPParseResult&&) noexcept = default;
-    
-    // 禁用拷贝构造
-    ARPParseResult(const ARPParseResult&) = delete;
-    ARPParseResult& operator=(const ARPParseResult&) = delete;
-    
-    ARPParseResult() = default;
 };
 
 /**

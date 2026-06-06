@@ -7,6 +7,7 @@
 #include <functional>
 #include <expected>
 #include <any>
+#include <vector>
 
 namespace protocol_parser::parsers {
 

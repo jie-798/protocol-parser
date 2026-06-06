@@ -1,6 +1,8 @@
 #pragma once
 
 #include "core/buffer_view.hpp"
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -14,6 +16,7 @@
 #include <chrono>
 #include <mutex>
 #include <shared_mutex>
+#include <utility>
 
 namespace protocol_parser::detection {
 

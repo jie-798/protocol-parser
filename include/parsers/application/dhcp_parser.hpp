@@ -6,6 +6,7 @@
 #include <vector>
 #include <optional>
 #include <array>
+#include <string>
 #include <string_view>
 
 using namespace protocol_parser::parsers;
