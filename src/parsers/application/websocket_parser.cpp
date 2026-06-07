@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 #include <regex>
+#include <cctype>
 
 // 简化的SHA1和Base64实现（生产环境应使用标准库）
 namespace {
@@ -41,6 +42,10 @@ namespace {
         size_t h = hasher(input);
         memcpy(hash.data(), &h, std::min(sizeof(h), hash.size()));
         return hash;
+    }
+
+    char ascii_lower(unsigned char c) {
+        return static_cast<char>(std::tolower(c));
     }
 }
 
@@ -125,8 +130,7 @@ bool WebSocketParser::is_websocket_frame(const protocol_parser::core::BufferView
     }
     
     uint8_t first_byte = buffer[0];
-    uint8_t second_byte = buffer[1];
-    
+
     // 检查操作码是否有效
     uint8_t opcode = first_byte & 0x0F;
     if (opcode > 0x2 && opcode < 0x8) {
@@ -470,14 +474,14 @@ ParseResult WebSocketParser::parse_header_line(const std::string& line,
     
     // 转换为小写进行比较
     std::string lower_key = key;
-    std::transform(lower_key.begin(), lower_key.end(), lower_key.begin(), ::tolower);
+    std::transform(lower_key.begin(), lower_key.end(), lower_key.begin(), ascii_lower);
     
     handshake.headers[key] = value;
     
     // 处理特殊头部
     if (lower_key == "upgrade") {
         std::string lower_value = value;
-        std::transform(lower_value.begin(), lower_value.end(), lower_value.begin(), ::tolower);
+        std::transform(lower_value.begin(), lower_value.end(), lower_value.begin(), ascii_lower);
         if (lower_value == "websocket") {
             handshake.is_upgrade = true;
         }
@@ -522,8 +526,7 @@ ParseResult WebSocketParser::parse_frame_header(const protocol_parser::core::Buf
     // 解析第二个字节
     uint8_t second_byte = buffer[offset++];
     header.mask = (second_byte & 0x80) != 0;
-    uint8_t payload_len = second_byte & 0x7F;
-    
+
     // 解析载荷长度
     size_t length_bytes = parse_payload_length(buffer, offset, header.payload_length);
     if (length_bytes == 0) {
@@ -582,7 +585,7 @@ bool WebSocketParser::validate_handshake(const WebSocketHandshake& handshake) co
     }
     
     std::string connection = it->second;
-    std::transform(connection.begin(), connection.end(), connection.begin(), ::tolower);
+    std::transform(connection.begin(), connection.end(), connection.begin(), ascii_lower);
     if (connection.find("upgrade") == std::string::npos) {
         return false;
     }

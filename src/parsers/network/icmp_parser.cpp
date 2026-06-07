@@ -200,6 +200,7 @@ std::string get_type_name(uint8_t type, bool is_ipv6) {
 }
 
 std::string get_code_name(uint8_t type, uint8_t code, bool is_ipv6) {
+    (void)is_ipv6;
     if (type == ICMPType::DEST_UNREACHABLE || type == ICMPType::DEST_UNREACHABLE_V6) {
         switch (code) {
             case ICMPCode::NET_UNREACHABLE: return "Network Unreachable";

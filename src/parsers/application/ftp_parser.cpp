@@ -451,7 +451,8 @@ std::string FTPParser::trim(const std::string& str) const {
 
 std::string FTPParser::to_upper(const std::string& str) const {
     std::string result = str;
-    std::transform(result.begin(), result.end(), result.begin(), ::toupper);
+    std::transform(result.begin(), result.end(), result.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
     return result;
 }
 

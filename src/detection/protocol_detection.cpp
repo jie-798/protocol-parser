@@ -720,15 +720,19 @@ void DeepPacketInspector::remove_rule(const std::string& protocol_name) {
 }
 
 std::vector<DetectionResult> DeepPacketInspector::inspect_deep(const protocol_parser::core::BufferView& buffer) const noexcept {
+    (void)buffer;
     // 简化实现
     return {};
 }
 
 void DeepPacketInspector::update_flow_state(const std::string& flow_id, const protocol_parser::core::BufferView& buffer) {
+    (void)flow_id;
+    (void)buffer;
     // 简化实现
 }
 
 std::vector<DetectionResult> DeepPacketInspector::analyze_flow(const std::string& flow_id) const {
+    (void)flow_id;
     // 简化实现
     return {};
 }
@@ -738,29 +742,36 @@ void DeepPacketInspector::initialize_standard_rules() {
 }
 
 bool DeepPacketInspector::match_regex_patterns(const std::vector<std::regex>& patterns, const protocol_parser::core::BufferView& buffer) const noexcept {
+    (void)patterns;
+    (void)buffer;
     // 简化实现
     return false;
 }
 
 MLFeatureExtractor::MLFeatures MLFeatureExtractor::extract_features(const std::vector<protocol_parser::core::BufferView>& packet_sequence) const noexcept {
+    (void)packet_sequence;
     // 简化实现
     return MLFeatures{};
 }
 
 std::vector<double> MLFeatureExtractor::to_feature_vector(const MLFeatures& features) const noexcept {
+    (void)features;
     // 简化实现
     return {};
 }
 
 double MLFeatureExtractor::calculate_compression_ratio(const protocol_parser::core::BufferView& buffer) const noexcept {
+    (void)buffer;
     return 1.0;
 }
 
 size_t MLFeatureExtractor::detect_length_fields(const protocol_parser::core::BufferView& buffer) const noexcept {
+    (void)buffer;
     return 0;
 }
 
 size_t MLFeatureExtractor::detect_checksum_patterns(const protocol_parser::core::BufferView& buffer) const noexcept {
+    (void)buffer;
     return 0;
 }
 

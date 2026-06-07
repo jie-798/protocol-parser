@@ -339,6 +339,9 @@ ParseResult MQTTParser::parse_variable_header(const uint8_t* data, size_t size, 
 }
 
 ParseResult MQTTParser::parse_payload(const uint8_t* data, size_t size, size_t& offset) noexcept {
+    (void)data;
+    (void)size;
+    (void)offset;
     // 载荷解析在具体的消息处理中完成
     return ParseResult::Success;
 }

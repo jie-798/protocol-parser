@@ -465,6 +465,7 @@ bool DNP3DeepAnalyzer::detect_broadcast_abuse(const DNP3Info& info) const {
 }
 
 bool DNP3DeepAnalyzer::detect_timing_attacks(const DNP3Info& info) const {
+    (void)info;
     auto now = std::chrono::steady_clock::now();
     
     // 检测高频请求

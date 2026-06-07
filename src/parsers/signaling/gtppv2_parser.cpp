@@ -183,25 +183,45 @@ bool GTPv2Parser::parse_gtpv2_message(const BufferView& buffer, GTPv2Info& info)
     // 解析重要的IE
     for (const auto& ie : info.ies) {
         switch (static_cast<GTPv2IEType>(ie.type)) {
-            case GTPv2IEType::IMSI:
-                extract_imsi(ie, info.imsi.emplace());
-                break;
-            case GTPv2IEType::Cause:
-                info.cause = static_cast<GTPv2Cause>(ie.value[0]);
-                break;
-            case GTPv2IEType::APN:
-                extract_apn(ie, info.apn.emplace());
-                break;
-            case GTPv2IEType::FTEID:
-                if (!info.sender_fteid.has_value() && ie.instance == 0) {
-                    extract_fteid(ie, info.sender_fteid.emplace());
-                } else {
-                    extract_fteid(ie, info.receiver_fteid.emplace());
+            case GTPv2IEType::IMSI: {
+                std::vector<uint8_t> imsi;
+                if (extract_imsi(ie, imsi)) {
+                    info.imsi = imsi;
                 }
                 break;
-            case GTPv2IEType::ChargingID:
-                extract_charging_id(ie, info.charging_id.emplace());
+            }
+            case GTPv2IEType::Cause: {
+                GTPv2Cause cause{};
+                if (extract_cause(ie, cause)) {
+                    info.cause = cause;
+                }
                 break;
+            }
+            case GTPv2IEType::APN: {
+                std::string apn;
+                if (extract_apn(ie, apn)) {
+                    info.apn = apn;
+                }
+                break;
+            }
+            case GTPv2IEType::FTEID: {
+                GTFTEID fteid;
+                if (extract_fteid(ie, fteid)) {
+                    if (!info.sender_fteid.has_value() && ie.instance == 0) {
+                        info.sender_fteid = fteid;
+                    } else {
+                        info.receiver_fteid = fteid;
+                    }
+                }
+                break;
+            }
+            case GTPv2IEType::ChargingID: {
+                uint32_t charging_id = 0;
+                if (extract_charging_id(ie, charging_id)) {
+                    info.charging_id = charging_id;
+                }
+                break;
+            }
             case GTPv2IEType::BearerContext: {
                 BearerContext ctx;
                 if (parse_bearer_context(BufferView(ie.value.data(), ie.value.size()), ctx)) {
@@ -219,7 +239,9 @@ bool GTPv2Parser::parse_gtpv2_message(const BufferView& buffer, GTPv2Info& info)
 
 GTPv2Info GTPv2Parser::parse_gtpv2_header(const BufferView& buffer) {
     GTPv2Info info;
-    parse_gtpv2_message(buffer, info);
+    if (!parse_gtpv2_message(buffer, info)) {
+        return {};
+    }
     return info;
 }
 
@@ -369,13 +391,12 @@ bool GTPv2Parser::parse_bearer_qos(const BufferView& buffer, EPSBearerQoS& qos) 
 bool GTPv2Parser::parse_bearer_context(const BufferView& buffer, BearerContext& ctx) {
     // 简化实现 - 实际需要递归解析IE组
     size_t offset = 0;
-    while (offset + 4 <= buffer.size()) {
+    while (offset + 5 <= buffer.size()) {
         uint16_t ie_type = (buffer[offset] << 8) | buffer[offset + 1];
         uint16_t ie_len = (buffer[offset + 2] << 8) | buffer[offset + 3];
-        uint8_t ie_instance = (buffer[offset + 4] >> 4) & 0x0F;
 
         if (ie_type == static_cast<uint16_t>(GTPv2IEType::EBI)) {
-            if (offset + 5 <= buffer.size()) {
+            if (ie_len > 0 && offset + 6 <= buffer.size()) {
                 ctx.ebi = buffer[offset + 5];
             }
         }

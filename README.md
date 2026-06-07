@@ -17,12 +17,13 @@
 - 数据链路层：Ethernet、ARP
 - 网络层：IPv4、IPv6、ICMP、ICMPv6
 - 传输层：TCP、UDP、SCTP、RTP、QUIC
-- 应用层：HTTP、HTTPS、FTP、SSH、DNS、POP3、Telnet、SNMP、DHCP、WebSocket、SIP、MQTT
+- 应用层：HTTP、HTTPS、FTP、SSH、DNS、POP3、Telnet、SNMP、DHCP、WebSocket、SIP、MQTT、gRPC
+- 安全分析：TLS 深度解析
 - 工业协议：Modbus、DNP3
 - 信令协议：GTPv2、Diameter、M3UA、S1AP、NGAP、X2AP、H.323、RADIUS
 - 检测与统计：协议检测器、AI 协议检测器、流量统计模块
 
-安全深度分析和部分实验性解析器仍在完善中，未全部纳入默认核心构建。
+部分协议解析器仍为简化实现，安全分析和实验性协议会随版本继续完善。
 
 ## 系统要求
 
@@ -42,16 +43,24 @@ cmake --build build --config Release
 
 ### 构建选项
 
-- `BUILD_EXAMPLES`：构建示例程序，默认 `OFF`。当前 `examples` 目录只保留 CMake 占位配置。
+- `BUILD_EXAMPLES`：构建示例程序，默认 `OFF`。启用后生成 `protocol_parser_basic_example`。
 - `BUILD_TESTS`：构建测试程序，默认 `OFF`。
 
 运行测试：
 
 ```bash
-cmake -S . -B build -DBUILD_TESTS=ON
+cmake -S . -B build -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
 cmake --build build --config Release
-ctest --test-dir build --output-on-failure
+ctest --test-dir build -C Release --output-on-failure
 ```
+
+安装到本地前缀：
+
+```bash
+cmake --install build --config Release --prefix install
+```
+
+安装后可通过 `find_package(protocol_parser CONFIG REQUIRED)` 或 `find_package(ProtocolParser CONFIG REQUIRED)` 使用，链接目标为 `protocol_parser::core`。
 
 ## 快速开始
 
@@ -162,16 +171,15 @@ struct ParseContext {
 
 ## 当前限制
 
-- 部分协议解析器仍是简化实现，校验和、重组、压缩、证书和安全分析能力并不完整。
-- `examples` 目录目前没有实际示例源文件。
-- 需要在目标平台实际运行 CMake/编译器验证构建矩阵。
+- 部分协议解析器仍是简化实现，校验和、重组、压缩、证书和安全分析能力仍会继续完善。
+- 发布前仍建议在目标平台实际运行 CMake、编译器、测试和示例验证。
 
 ## 贡献
 
 欢迎补充协议解析、测试样例和跨平台构建验证。提交前建议运行：
 
 ```bash
-cmake -S . -B build -DBUILD_TESTS=ON
+cmake -S . -B build -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
 cmake --build build --config Release
-ctest --test-dir build --output-on-failure
+ctest --test-dir build -C Release --output-on-failure
 ```

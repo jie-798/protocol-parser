@@ -1,5 +1,6 @@
 #include "core/tcp_reassembler.hpp"
 #include <algorithm>
+#include <chrono>
 #include <iterator>
 #include <limits>
 
@@ -266,15 +267,23 @@ void TcpReassembler::reset() {
 // TcpConnectionTracker 实现
 // ============================================================================
 
+TcpConnectionTracker::TcpConnectionTracker(uint64_t timeout_ms)
+    : timeout_ms_(timeout_ms) {
+}
+
+uint64_t TcpConnectionTracker::current_time_ms() noexcept {
+    const auto now = std::chrono::steady_clock::now().time_since_epoch();
+    return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(now).count());
+}
+
 TcpReassembler& TcpConnectionTracker::get_reassembler(
     const ConnectionKey& key,
     Direction dir) {
 
     auto [it, inserted] = connections_.emplace(key, Connection{});
+    (void)inserted;
 
-    // 更新活动时间
-    // TODO: 使用实际时间戳
-    it->second.last_activity_ms = 0;
+    it->second.last_activity_ms = current_time_ms();
 
     return (dir == Direction::ClientToServer)
         ? it->second.client_to_server
@@ -286,8 +295,15 @@ void TcpConnectionTracker::remove_connection(const ConnectionKey& key) {
 }
 
 void TcpConnectionTracker::cleanup_old_connections() {
-    // TODO: 实现超时清理
-    // 遍历所有连接，检查 last_activity_ms
+    const uint64_t now = current_time_ms();
+    for (auto it = connections_.begin(); it != connections_.end();) {
+        const uint64_t last_activity = it->second.last_activity_ms;
+        if (last_activity <= now && now - last_activity >= timeout_ms_) {
+            it = connections_.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 // ============================================================================

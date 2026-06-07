@@ -427,8 +427,8 @@ std::string expand_address(const std::string& addr) {
         std::string before = expanded.substr(0, double_colon_pos);
         std::string after = expanded.substr(double_colon_pos + 2);
         
-        int before_segments = before.empty() ? 0 : std::count(before.begin(), before.end(), ':') + 1;
-        int after_segments = after.empty() ? 0 : std::count(after.begin(), after.end(), ':') + 1;
+        int before_segments = before.empty() ? 0 : static_cast<int>(std::count(before.begin(), before.end(), ':')) + 1;
+        int after_segments = after.empty() ? 0 : static_cast<int>(std::count(after.begin(), after.end(), ':')) + 1;
         
         if (before.empty()) before_segments = 0;
         if (after.empty()) after_segments = 0;

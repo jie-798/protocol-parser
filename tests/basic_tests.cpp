@@ -1,26 +1,61 @@
 #include "core/buffer_view.hpp"
 #include "core/buffer_pool.hpp"
 #include "core/tcp_reassembler.hpp"
-#include "utils/simd_utils.hpp"}NB? Again? Need be careful; I see new_string includes `"}`? In JSON maybe correct. It includes `#include "utils/simd_utils.hpp"`. Fine. Let's see. Wait closing. It has extra? The JSON line: `
-#include "parsers/datalink/arp_parser.hpp"}NB: This JSON seems malformed with extra. Need fix. I accidentally included `}NB`? Actually tool call JSON malformed? It might fail. Wait it's in assistant to functions.Edit, valid? Let's see output. (No output yet? Actually I included `}NB...` in code? The JSON field new_string has `#include ...` no close? I see `
+#include "utils/simd_utils.hpp"
+#include "parsers/datalink/arp_parser.hpp"
 #include "parsers/datalink/ethernet_parser.hpp"
+#include "parsers/security/tls_deep_inspector.hpp"
 #include "parsers/base_parser.hpp"
 
+#include <algorithm>
 #include <any>
 #include <array>
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <string_view>
 
 using protocol_parser::core::BufferPool;
 using protocol_parser::core::BufferView;
+using protocol_parser::core::TcpConnectionTracker;
 using protocol_parser::core::TcpReassembler;
 using protocol_parser::core::TcpSegment;
+using protocol_parser::security::TLSStatistics;
 using protocol_parser::utils::SIMDUtils;
 using namespace protocol_parser::parsers;
 
 namespace {
 int failures = 0;
+
+class DummyParser final : public BaseParser {
+public:
+    const ProtocolInfo& get_protocol_info() const noexcept override {
+        static const ProtocolInfo info{"dummy", 0xF00D, 0, 0, 0};
+        return info;
+    }
+
+    bool can_parse(const BufferView& buffer) const noexcept override {
+        return !buffer.empty();
+    }
+
+    ParseResult parse(ParseContext& context) noexcept override {
+        context.state = ParserState::Complete;
+        return ParseResult::Success;
+    }
+
+    void reset() noexcept override {}
+};
+
+class DummyFactory final : public ParserFactory {
+public:
+    std::unique_ptr<BaseParser> create_parser() override {
+        return std::make_unique<DummyParser>();
+    }
+
+    std::vector<uint16_t> get_supported_types() const override {
+        return {0xF00D};
+    }
+};
 
 void expect(bool condition, const char* expression) {
     if (!condition) {
@@ -130,6 +165,48 @@ void test_tcp_reassembler_overlapping_segments() {
     EXPECT(reassembler.get_segments().empty());
 }
 
+void test_tcp_connection_tracker_cleanup() {
+    TcpConnectionTracker tracker(0);
+    const TcpConnectionTracker::ConnectionKey key{0x0a000001, 0x0a000002, 12345, 80, true};
+
+    (void)tracker.get_reassembler(key, TcpConnectionTracker::Direction::ClientToServer);
+    EXPECT(tracker.connection_count() == 1);
+
+    tracker.cleanup_old_connections();
+    EXPECT(tracker.connection_count() == 0);
+}
+
+void test_tls_statistics_snapshot_copy() {
+    TLSStatistics stats;
+    stats.record_connection(true);
+    stats.handshake_messages++;
+    stats.version_counts[0x0304] = 1;
+
+    TLSStatistics snapshot = stats;
+    EXPECT(snapshot.total_connections.load() == 1);
+    EXPECT(snapshot.successful_handshakes.load() == 1);
+    EXPECT(snapshot.handshake_messages.load() == 1);
+    EXPECT(snapshot.version_counts.at(0x0304) == 1);
+
+    TLSStatistics assigned;
+    assigned = stats;
+    EXPECT(assigned.total_connections.load() == 1);
+    EXPECT(assigned.successful_handshakes.load() == 1);
+}
+
+void test_parser_registry_factory_round_trip() {
+    auto& registry = ParserRegistry::instance();
+    registry.register_factory(0xF00D, std::make_unique<DummyFactory>());
+
+    auto parser = registry.create_parser(0xF00D);
+    EXPECT(parser != nullptr);
+    EXPECT(parser->get_protocol_info().name == "dummy");
+    EXPECT(registry.create_parser(0xF00E) == nullptr);
+
+    const auto supported_types = registry.get_supported_types();
+    EXPECT(std::find(supported_types.begin(), supported_types.end(), 0xF00D) != supported_types.end());
+}
+
 void test_ethernet_parser_reuse() {
     const std::array<uint8_t, 18> frame_one{
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -187,6 +264,9 @@ int main() {
     test_buffer_pool_thread_cache_reuse();
     test_crc32_checksums();
     test_tcp_reassembler_overlapping_segments();
+    test_tcp_connection_tracker_cleanup();
+    test_tls_statistics_snapshot_copy();
+    test_parser_registry_factory_round_trip();
     test_ethernet_parser_reuse();
     test_arp_parser_single_call_completion();
     return failures == 0 ? 0 : 1;

@@ -107,6 +107,8 @@ bool H323Parser::parse_q931_message(const BufferView& buffer, H323CallInfo& info
 }
 
 bool H323Parser::parse_h245_message(const BufferView& buffer, H323CallInfo& info) {
+    (void)buffer;
+    (void)info;
     // TODO: 实现H.245逻辑信道信令解析
     // H.245使用PER编码，比较复杂
     return false;

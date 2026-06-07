@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <limits>
 
 namespace protocol_parser::parsers {
 
@@ -138,10 +139,13 @@ ParseResult ICMPv6Parser::parse_payload(ParseContext& context) noexcept {
     
     // 验证校验和（如果有IPv6地址信息）
     if (has_addresses_) {
-        result_.checksum_valid = result_.header.verify_checksum(
-            context.buffer.substr(context.offset - ICMPv6Header::SIZE),
-            src_addr_, dst_addr_, remaining + ICMPv6Header::SIZE
-        );
+        const size_t checksum_length = remaining + ICMPv6Header::SIZE;
+        if (checksum_length <= std::numeric_limits<uint32_t>::max()) {
+            result_.checksum_valid = result_.header.verify_checksum(
+                context.buffer.substr(context.offset - ICMPv6Header::SIZE),
+                src_addr_, dst_addr_, static_cast<uint32_t>(checksum_length)
+            );
+        }
     }
     
     // 解析邻居发现选项（如果适用）

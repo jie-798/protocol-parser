@@ -172,7 +172,7 @@ public:
         }
     };
 
-    explicit TcpConnectionTracker() = default;
+    explicit TcpConnectionTracker(uint64_t timeout_ms = TcpReassembler::Config{}.timeout_ms);
     ~TcpConnectionTracker() = default;
 
     /**
@@ -198,13 +198,16 @@ public:
     }
 
 private:
+    static uint64_t current_time_ms() noexcept;
+
     // 双向重组器
     struct Connection {
         TcpReassembler client_to_server;
         TcpReassembler server_to_client;
-        uint64_t last_activity_ms;  // 最后活动时间
+        uint64_t last_activity_ms = 0;  // 最后活动时间
     };
 
+    uint64_t timeout_ms_;
     std::map<ConnectionKey, Connection> connections_;
 };
 

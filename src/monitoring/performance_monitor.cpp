@@ -262,7 +262,6 @@ PerformanceMonitor::RealTimeMetrics PerformanceMonitor::get_real_time_metrics() 
         std::shared_lock metrics_lock(metrics_mutex_);
         
         // 计算总解析速率
-        double total_parse_rate = 0.0;
         double total_throughput = 0.0;
         double total_parse_time = 0.0;
         double total_error_rate = 0.0;

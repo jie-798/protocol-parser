@@ -182,11 +182,12 @@ bool QuicParser::parse_long_header(const BufferView& buffer, size_t& offset) {
 
     // 剩余的是载荷（帧）
     if (offset < buffer.size()) {
-        size_t payload_size = buffer.size() - offset;
         result_.payload.assign(buffer.data() + offset, buffer.data() + buffer.size());
 
         // 尝试解析帧
-        parse_frames(buffer, offset);
+        if (!parse_frames(buffer, offset)) {
+            return false;
+        }
     }
 
     return true;

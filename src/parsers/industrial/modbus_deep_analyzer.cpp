@@ -23,15 +23,15 @@ ModbusDeepAnalyzer::ModbusDeepAnalyzer()
     
     // 初始化异常码映射
     exception_codes_ = {
-        {0x01, "Illegal Function"},
-        {0x02, "Illegal Data Address"},
-        {0x03, "Illegal Data Value"},
-        {0x04, "Slave Device Failure"},
-        {0x05, "Acknowledge"},
-        {0x06, "Slave Device Busy"},
-        {0x08, "Memory Parity Error"},
-        {0x0A, "Gateway Path Unavailable"},
-        {0x0B, "Gateway Target Device Failed to Respond"}
+        {static_cast<uint8_t>(0x01), "Illegal Function"},
+        {static_cast<uint8_t>(0x02), "Illegal Data Address"},
+        {static_cast<uint8_t>(0x03), "Illegal Data Value"},
+        {static_cast<uint8_t>(0x04), "Slave Device Failure"},
+        {static_cast<uint8_t>(0x05), "Acknowledge"},
+        {static_cast<uint8_t>(0x06), "Slave Device Busy"},
+        {static_cast<uint8_t>(0x08), "Memory Parity Error"},
+        {static_cast<uint8_t>(0x0A), "Gateway Path Unavailable"},
+        {static_cast<uint8_t>(0x0B), "Gateway Target Device Failed to Respond"}
     };
     
     // 初始化统计信息

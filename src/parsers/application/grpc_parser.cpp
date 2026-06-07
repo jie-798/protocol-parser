@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <cstring>
+#include <cctype>
 
 namespace ProtocolParser::Parsers::Application {
 
@@ -71,7 +72,6 @@ bool GRPCParser::is_grpc_traffic(const protocol_parser::core::BufferView& buffer
     // 检查HTTP/2帧头格式
     uint32_t length = (buffer[0] << 16) | (buffer[1] << 8) | buffer[2];
     uint8_t type = buffer[3];
-    uint8_t flags = buffer[4];
     uint32_t stream_id = buffer.read_be32(5) & 0x7FFFFFFF;
     
     // 基本有效性检查
@@ -522,7 +522,8 @@ ParseResult GRPCParser::simple_hpack_decode(const std::vector<uint8_t>& data,
             } else {
                 // 处理普通头部
                 std::string lower_name = name;
-                std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(), ::tolower);
+                std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
+                               [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
                 
                 if (lower_name == "content-type") {
                     headers.content_type = value;
@@ -564,6 +565,7 @@ void GRPCParser::parse_pseudo_header(const std::string& name,
 }
 
 GRPCStreamType GRPCParser::detect_stream_type(const GRPCHeaders& headers) const {
+    (void)headers;
     // 基于头部信息简单推断流类型
     // 实际的流类型检测需要分析多个消息
     

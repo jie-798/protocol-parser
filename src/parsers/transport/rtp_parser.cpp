@@ -135,7 +135,6 @@ ParseResult RtpParser::parse(ParseContext& context) noexcept {
 
         // 读取载荷
         if (offset < buffer.size()) {
-            size_t payload_size = buffer.size() - offset;
             rtp_result_.payload.assign(buffer.data() + offset,
                                       buffer.data() + buffer.size());
         }

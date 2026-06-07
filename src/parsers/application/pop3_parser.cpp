@@ -38,7 +38,8 @@ bool POP3Parser::can_parse(const core::BufferView& buffer) const noexcept {
     }
     
     // Check for common POP3 commands
-    std::transform(data.begin(), data.end(), data.begin(), ::toupper);
+    std::transform(data.begin(), data.end(), data.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
     return data.find("USER") == 0 || data.find("PASS") == 0 || 
            data.find("STAT") == 0 || data.find("LIST") == 0 ||
            data.find("RETR") == 0 || data.find("QUIT") == 0;
@@ -136,7 +137,8 @@ bool POP3Parser::parse_command(const std::string& line, POP3CommandMessage& cmd)
     iss >> command_str;
     
     // Convert to uppercase for comparison
-    std::transform(command_str.begin(), command_str.end(), command_str.begin(), ::toupper);
+    std::transform(command_str.begin(), command_str.end(), command_str.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
     cmd.command_str = command_str;
     cmd.command = string_to_command(command_str);
     
@@ -210,7 +212,8 @@ bool POP3Parser::parse_multiline_response(const std::vector<std::string>& lines,
 
 POP3Command POP3Parser::string_to_command(const std::string& cmd_str) {
     std::string upper_cmd = cmd_str;
-    std::transform(upper_cmd.begin(), upper_cmd.end(), upper_cmd.begin(), ::toupper);
+    std::transform(upper_cmd.begin(), upper_cmd.end(), upper_cmd.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
     
     if (upper_cmd == "USER") return POP3Command::USER;
     if (upper_cmd == "PASS") return POP3Command::PASS;

@@ -41,6 +41,7 @@ bool NGAPParser::can_parse(const BufferView& buffer) const noexcept {
 }
 
 ParseResult NGAPParser::parse(ParseContext& context) noexcept {
+    (void)context;
     return ParseResult::Success;
 }
 

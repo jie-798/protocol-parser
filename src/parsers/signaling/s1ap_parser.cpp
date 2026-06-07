@@ -35,6 +35,7 @@ bool S1APParser::can_parse(const BufferView& buffer) const noexcept {
 }
 
 ParseResult S1APParser::parse(ParseContext& context) noexcept {
+    (void)context;
     return ParseResult::Success;
 }
 

@@ -1,12 +1,13 @@
 #pragma once
 
-#include "../core/buffer_view.hpp"
+#include "core/buffer_view.hpp"
 #include <cstdint>
 #include <string>
 #include <vector>
 #include <unordered_map>
 #include <chrono>
 #include <array>
+#include <atomic>
 
 namespace protocol_parser::security {
 
@@ -257,7 +258,33 @@ struct TLSStatistics {
     std::unordered_map<uint16_t, uint64_t> version_counts;
     std::unordered_map<uint16_t, uint64_t> cipher_suite_counts;
     std::unordered_map<std::string, uint64_t> sni_counts;
-    
+
+    TLSStatistics() = default;
+
+    TLSStatistics(const TLSStatistics& other) {
+        *this = other;
+    }
+
+    TLSStatistics& operator=(const TLSStatistics& other) {
+        total_connections.store(other.total_connections.load());
+        successful_handshakes.store(other.successful_handshakes.load());
+        failed_handshakes.store(other.failed_handshakes.load());
+        session_resumptions.store(other.session_resumptions.load());
+        renegotiations.store(other.renegotiations.load());
+        total_bytes_encrypted.store(other.total_bytes_encrypted.load());
+        total_bytes_decrypted.store(other.total_bytes_decrypted.load());
+        handshake_messages.store(other.handshake_messages.load());
+        application_messages.store(other.application_messages.load());
+        alert_messages.store(other.alert_messages.load());
+        heartbeat_messages.store(other.heartbeat_messages.load());
+        last_activity = other.last_activity;
+        avg_handshake_time = other.avg_handshake_time;
+        version_counts = other.version_counts;
+        cipher_suite_counts = other.cipher_suite_counts;
+        sni_counts = other.sni_counts;
+        return *this;
+    }
+
     void record_connection(bool success) {
         total_connections++;
         if (success) {

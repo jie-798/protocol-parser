@@ -1,4 +1,4 @@
-#include "../../include/parsers/security/tls_deep_inspector.hpp"
+#include "parsers/security/tls_deep_inspector.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstring>
@@ -339,10 +339,12 @@ bool TLSDeepInspector::check_crime_vulnerability(const TLSInfo& info) const {
 }
 
 bool TLSDeepInspector::check_freak_vulnerability(const TLSInfo& info) const {
+    (void)info;
     return false; // 简化实现
 }
 
 bool TLSDeepInspector::check_logjam_vulnerability(const TLSInfo& info) const {
+    (void)info;
     return false; // 简化实现
 }
 
@@ -390,6 +392,8 @@ std::vector<std::string> TLSDeepInspector::detect_vulnerabilities(const TLSInfo&
 }
 
 bool TLSDeepInspector::analyze_certificate_chain(const std::vector<TLSCertificate>& chain, TLSSecurityAnalysis& analysis) const {
+    (void)chain;
+    (void)analysis;
     return true; // 简化实现
 }
 

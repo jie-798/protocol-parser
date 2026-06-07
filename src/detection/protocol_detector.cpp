@@ -7,6 +7,21 @@
 #include <cctype>
 #include <cmath>
 #include <cstring>
+#include <limits>
+
+namespace {
+char ascii_lower(unsigned char c) noexcept {
+    return static_cast<char>(std::tolower(c));
+}
+
+uint32_t saturating_add(uint32_t value, size_t delta) noexcept {
+    constexpr uint32_t max = std::numeric_limits<uint32_t>::max();
+    if (delta >= max - value) {
+        return max;
+    }
+    return value + static_cast<uint32_t>(delta);
+}
+}
 
 namespace protocol_parser::detection {
 
@@ -349,6 +364,7 @@ std::optional<ProtocolDetectorResult> ProtocolDetector::detect_by_ml(
     const FlowKey& key,
     const core::BufferView& payload) {
 
+    (void)payload;
     // 简化的机器学习模型（实际应用中应使用训练好的模型）
     // 这里使用简单的启发式规则
 
@@ -410,13 +426,13 @@ bool ProtocolDetector::check_string_pattern(
     // 检查字符串模式（不区分大小写）
     std::string pattern_lower = pattern;
     std::transform(pattern_lower.begin(), pattern_lower.end(),
-                  pattern_lower.begin(), ::tolower);
+                  pattern_lower.begin(), ascii_lower);
 
     // 查找模式
     for (size_t i = 0; i <= payload.size() - pattern.size(); ++i) {
         bool match = true;
         for (size_t j = 0; j < pattern.size(); ++j) {
-            if (std::tolower(payload[i + j]) != pattern_lower[j]) {
+            if (ascii_lower(payload[i + j]) != pattern_lower[j]) {
                 match = false;
                 break;
             }
@@ -441,14 +457,14 @@ void ProtocolDetector::update_flow_state(
     auto& state = flow_states_[key];
 
     state.packet_count++;
-    state.byte_count += payload_size;
+    state.byte_count = saturating_add(state.byte_count, payload_size);
 
     if (is_client_to_server) {
         state.client_to_server_packets++;
-        state.client_to_server_bytes += payload_size;
+        state.client_to_server_bytes = saturating_add(state.client_to_server_bytes, payload_size);
     } else {
         state.server_to_client_packets++;
-        state.server_to_client_bytes += payload_size;
+        state.server_to_client_bytes = saturating_add(state.server_to_client_bytes, payload_size);
     }
 
     // 数据包大小分布

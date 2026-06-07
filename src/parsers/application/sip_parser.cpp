@@ -238,8 +238,8 @@ bool SipParser::parse_headers(const std::vector<std::string>& lines) {
 
         // 提取关键头部（快速访问）
         std::string lower_name = name;
-        std::transform(lower_name.begin(), lower_name.end(),
-                      lower_name.begin(), ::tolower);
+        std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
+                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
         if (lower_name == "from") {
             result_.from = value;
@@ -291,13 +291,13 @@ bool SipParser::parse_body(const BufferView& buffer, size_t offset) {
 
 std::optional<std::string> SipParser::find_header(const std::string& name) const {
     std::string lower_name = name;
-    std::transform(lower_name.begin(), lower_name.end(),
-                  lower_name.begin(), ::tolower);
+    std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
     for (const auto& header : result_.headers) {
         std::string header_lower = header.name;
-        std::transform(header_lower.begin(), header_lower.end(),
-                      header_lower.begin(), ::tolower);
+        std::transform(header_lower.begin(), header_lower.end(), header_lower.begin(),
+                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
         if (header_lower == lower_name) {
             return header.value;
@@ -308,6 +308,7 @@ std::optional<std::string> SipParser::find_header(const std::string& name) const
 }
 
 void SipParser::parse_sdp(const std::string& sdp) {
+    (void)sdp;
     // 简化：暂不解析 SDP
     // SDP 格式:
     // v=0 (protocol version)

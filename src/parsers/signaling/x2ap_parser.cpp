@@ -33,6 +33,7 @@ bool X2APParser::can_parse(const BufferView& buffer) const noexcept {
 }
 
 ParseResult X2APParser::parse(ParseContext& context) noexcept {
+    (void)context;
     return ParseResult::Success;
 }
 

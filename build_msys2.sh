@@ -30,6 +30,8 @@ cd build
 echo "配置CMake..."
 cmake -G "MinGW Makefiles" \
       -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_TESTS=ON \
+      -DBUILD_EXAMPLES=ON \
       -DCMAKE_CXX_COMPILER=g++ \
       -DCMAKE_C_COMPILER=gcc \
       ..
@@ -44,9 +46,16 @@ cmake --build . --parallel $(nproc)
 
 if [ $? -eq 0 ]; then
     echo "✅ 编译成功!"
-    echo "可执行文件位置: build/bin/examples/"
-    
-    # 列出生成的可执行文件
+    echo "运行测试..."
+    ctest --output-on-failure
+    if [ $? -ne 0 ]; then
+        echo "❌ 测试失败!"
+        exit 1
+    fi
+
+    echo "示例程序位置: build/bin/examples/protocol_parser_basic_example"
+
+    # 列出生成的示例程序
     if [ -d "bin/examples" ]; then
         echo "生成的示例程序:"
         ls -la bin/examples/

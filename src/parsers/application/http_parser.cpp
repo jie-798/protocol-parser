@@ -303,7 +303,8 @@ std::string HTTPParser::trim(const std::string& str) const {
 
 std::string HTTPParser::to_lower(const std::string& str) const {
     std::string result = str;
-    std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+    std::transform(result.begin(), result.end(), result.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return result;
 }
 

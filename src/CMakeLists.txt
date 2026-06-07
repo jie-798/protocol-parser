@@ -31,7 +31,7 @@ file(GLOB_RECURSE PARSER_SOURCES
     "parsers/application/telnet_parser.cpp"
     "parsers/application/snmp_parser.cpp"
     "parsers/application/dhcp_parser.cpp"
-    # "parsers/application/grpc_parser.cpp"
+    "parsers/application/grpc_parser.cpp"
     "parsers/application/websocket_parser.cpp"
     "parsers/application/sip_parser.cpp"
     "parsers/application/mqtt_parser.cpp"
@@ -42,7 +42,7 @@ file(GLOB_RECURSE PARSER_SOURCES
     "parsers/transport/tcp_parser.cpp"
     "parsers/transport/udp_parser.cpp"
     "parsers/transport/sctp_parser.cpp"
-    # "parsers/security/*.cpp"  # 暂时排除
+    "parsers/security/*.cpp"
     "parsers/industrial/*.cpp"  # 工业协议解析器
     "parsers/signaling/*.cpp"  # 信令协议解析器 (GTPv2, Diameter, S1AP, etc.)
 )
@@ -66,6 +66,8 @@ set(ALL_SOURCES
 
 # 创建核心库
 add_library(protocol_parser_core STATIC ${ALL_SOURCES})
+add_library(protocol_parser::core ALIAS protocol_parser_core)
+set_target_properties(protocol_parser_core PROPERTIES EXPORT_NAME core)
 
 # 设置目标属性
 target_include_directories(protocol_parser_core
@@ -121,9 +123,61 @@ target_compile_definitions(protocol_parser_core PRIVATE
 )
 
 # 安装规则
+include(CMakePackageConfigHelpers)
+
 install(TARGETS protocol_parser_core
     EXPORT protocol_parser_targets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
+)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
+    DESTINATION include
+)
+
+install(EXPORT protocol_parser_targets
+    FILE protocol_parser_targets.cmake
+    NAMESPACE protocol_parser::
+    DESTINATION lib/cmake/protocol_parser
+)
+
+install(EXPORT protocol_parser_targets
+    FILE protocol_parser_targets.cmake
+    NAMESPACE protocol_parser::
+    DESTINATION lib/cmake/ProtocolParser
+)
+
+set(PROTOCOL_PARSER_CONFIG_CONTENT
+"include(CMakeFindDependencyMacro)\nfind_dependency(Threads)\ninclude(\${CMAKE_CURRENT_LIST_DIR}/protocol_parser_targets.cmake)\n"
+)
+
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/protocol_parserConfig.cmake
+    "${PROTOCOL_PARSER_CONFIG_CONTENT}"
+)
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/ProtocolParserConfig.cmake
+    "${PROTOCOL_PARSER_CONFIG_CONTENT}"
+)
+
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/protocol_parserConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/ProtocolParserConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/protocol_parserConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/protocol_parserConfigVersion.cmake
+    DESTINATION lib/cmake/protocol_parser
+)
+
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/ProtocolParserConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/ProtocolParserConfigVersion.cmake
+    DESTINATION lib/cmake/ProtocolParser
 )

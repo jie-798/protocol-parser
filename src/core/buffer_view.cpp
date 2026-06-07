@@ -305,18 +305,16 @@ BufferView::size_type BufferView::find_simd(const void* pattern, size_type patte
     size_type search_offset = 0;
     const size_type last_candidate = size_ - pattern_size;
     while (search_offset <= last_candidate) {
-        const BufferView remaining(data_ptr_ + search_offset, size_ - search_offset);
-        const size_type match = remaining.find_simd(*pat);
-        if (match == SIZE_MAX) {
+        const size_type search_size = last_candidate - search_offset + 1;
+        const auto* found = static_cast<const uint8_t*>(
+            std::memchr(data_ptr_ + search_offset, *pat, search_size)
+        );
+        if (found == nullptr) {
             return SIZE_MAX;
         }
 
-        const size_type candidate = search_offset + match;
-        if (candidate > last_candidate) {
-            return SIZE_MAX;
-        }
-
-        if (std::memcmp(data_ptr_ + candidate, pat, pattern_size) == 0) {
+        const size_type candidate = static_cast<size_type>(found - data_ptr_);
+        if (std::memcmp(found + 1, pat + 1, pattern_size - 1) == 0) {
             return candidate;
         }
         search_offset = candidate + 1;

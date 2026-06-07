@@ -189,7 +189,9 @@ bool DiameterParser::parse_diameter_message(const BufferView& buffer, DiameterMe
 
 DiameterMessage DiameterParser::parse_message(const BufferView& buffer) {
     DiameterMessage msg;
-    parse_diameter_message(buffer, msg);
+    if (!parse_diameter_message(buffer, msg)) {
+        return {};
+    }
     return msg;
 }
 
