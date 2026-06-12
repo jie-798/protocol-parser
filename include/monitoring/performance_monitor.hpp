@@ -95,11 +95,15 @@ public:
             current_index_ = (current_index_ + 1) % window_size_;
         }
         
-        update_stats();
+        dirty_ = true;  // 惰性：标记脏，查询时才重新计算
     }
     
     [[nodiscard]] PerformanceStats get_stats() const noexcept {
         std::lock_guard lock(mutex_);
+        if (dirty_) {
+            const_cast<RealTimeCalculator*>(this)->compute_stats();
+            dirty_ = false;
+        }
         return current_stats_;
     }
     
@@ -107,6 +111,7 @@ public:
         std::lock_guard lock(mutex_);
         count_ = 0;
         current_index_ = 0;
+        dirty_ = true;
         current_stats_ = PerformanceStats{};
     }
 
@@ -151,8 +156,45 @@ private:
     std::vector<T> values_;
     size_t count_{0};
     size_t current_index_{0};
-    PerformanceStats current_stats_;
+    mutable bool dirty_ = true;  // 惰性排序标记
+    mutable PerformanceStats current_stats_;
     mutable std::mutex mutex_;
+    
+    void compute_stats() noexcept {
+        if (count_ == 0) return;
+        
+        const size_t actual_count = std::min(count_, window_size_);
+        std::vector<T> sorted_values(actual_count);
+        
+        for (size_t i = 0; i < actual_count; ++i) {
+            sorted_values[i] = values_[i];
+        }
+        
+        std::sort(sorted_values.begin(), sorted_values.end());
+        
+        current_stats_.count = actual_count;
+        current_stats_.min_value = sorted_values.front();
+        current_stats_.max_value = sorted_values.back();
+        current_stats_.median_value = sorted_values[actual_count / 2];
+        current_stats_.p95_value = sorted_values[static_cast<size_t>(actual_count * 0.95)];
+        current_stats_.p99_value = sorted_values[static_cast<size_t>(actual_count * 0.99)];
+        
+        // 一次遍历计算和与方差
+        T sum = 0;
+        for (size_t i = 0; i < actual_count; ++i) {
+            sum += sorted_values[i];
+        }
+        current_stats_.avg_value = static_cast<double>(sum) / actual_count;
+        current_stats_.sum_value = sum;
+        
+        T variance_sum = 0;
+        for (size_t i = 0; i < actual_count; ++i) {
+            T diff = sorted_values[i] - static_cast<T>(current_stats_.avg_value);
+            variance_sum += diff * diff;
+        }
+        current_stats_.variance = static_cast<double>(variance_sum) / actual_count;
+        current_stats_.std_deviation = std::sqrt(current_stats_.variance);
+    }
 };
 
 // 性能阈值配置

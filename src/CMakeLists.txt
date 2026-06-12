@@ -1,26 +1,28 @@
 # 协议解析器核心库构建配置
 
+# 创建核心库（源文件通过 target_sources 添加）
+add_library(protocol_parser_core STATIC)
+
 # 核心组件
-file(GLOB_RECURSE CORE_SOURCES
+target_sources(protocol_parser_core PRIVATE
     "core/buffer_view.cpp"
     "core/buffer_pool.cpp"
     "core/tcp_reassembler.cpp"
 )
 
 # 工具类
-file(GLOB_RECURSE UTILS_SOURCES
+target_sources(protocol_parser_core PRIVATE
     "utils/network_utils.cpp"
     "utils/simd_utils.cpp"
 )
 
-
 # 监控组件
-file(GLOB_RECURSE MONITORING_SOURCES
-    "monitoring/*.cpp"
+target_sources(protocol_parser_core PRIVATE
+    "monitoring/performance_monitor.cpp"
 )
 
 # 协议解析器
-file(GLOB_RECURSE PARSER_SOURCES
+target_sources(protocol_parser_core PRIVATE
     "parsers/base_parser.cpp"
     "parsers/application/http_parser.cpp"
     "parsers/application/https_parser.cpp"
@@ -35,37 +37,37 @@ file(GLOB_RECURSE PARSER_SOURCES
     "parsers/application/websocket_parser.cpp"
     "parsers/application/sip_parser.cpp"
     "parsers/application/mqtt_parser.cpp"
-    "parsers/datalink/*.cpp"
-    "parsers/network/*.cpp"
+    "parsers/datalink/arp_parser.cpp"
+    "parsers/datalink/ethernet_parser.cpp"
+    "parsers/network/icmp_parser.cpp"
+    "parsers/network/icmpv6_parser.cpp"
+    "parsers/network/ipv4_parser.cpp"
+    "parsers/network/ipv6_parser.cpp"
     "parsers/transport/quic_parser.cpp"
     "parsers/transport/rtp_parser.cpp"
     "parsers/transport/tcp_parser.cpp"
     "parsers/transport/udp_parser.cpp"
     "parsers/transport/sctp_parser.cpp"
-    "parsers/security/*.cpp"
-    "parsers/industrial/*.cpp"  # 工业协议解析器
-    "parsers/signaling/*.cpp"  # 信令协议解析器 (GTPv2, Diameter, S1AP, etc.)
+    "parsers/security/tls_deep_inspector.cpp"
+    "parsers/industrial/modbus_deep_analyzer.cpp"
+    "parsers/industrial/dnp3_deep_analyzer.cpp"
+    "parsers/signaling/diameter_parser.cpp"
+    "parsers/signaling/gtppv2_parser.cpp"
+    "parsers/signaling/h323_parser.cpp"
+    "parsers/signaling/m3ua_parser.cpp"
+    "parsers/signaling/ngap_parser.cpp"
+    "parsers/signaling/radius_parser.cpp"
+    "parsers/signaling/s1ap_parser.cpp"
+    "parsers/signaling/x2ap_parser.cpp"
 )
 
 # 检测、AI和统计组件
-file(GLOB_RECURSE DETECTION_SOURCES
+target_sources(protocol_parser_core PRIVATE
     "detection/protocol_detection.cpp"
     "detection/protocol_detector.cpp"
     "ai/protocol_detector.cpp"
     "statistics/traffic_statistics.cpp"
 )
-
-# 合并所有源文件
-set(ALL_SOURCES
-    ${CORE_SOURCES}
-    ${UTILS_SOURCES}
-    ${MONITORING_SOURCES}
-    ${PARSER_SOURCES}
-    ${DETECTION_SOURCES}
-)
-
-# 创建核心库
-add_library(protocol_parser_core STATIC ${ALL_SOURCES})
 add_library(protocol_parser::core ALIAS protocol_parser_core)
 set_target_properties(protocol_parser_core PROPERTIES EXPORT_NAME core)
 
@@ -93,6 +95,7 @@ if(MSVC)
         $<$<CONFIG:Release>:/Ot>
         $<$<CONFIG:Release>:/Oy>
         $<$<CONFIG:Release>:/GL>
+        $<$<CONFIG:Release>:/arch:AVX2>
         $<$<CONFIG:Release>:/fp:fast>
     )
     target_link_options(protocol_parser_core PUBLIC
@@ -100,7 +103,7 @@ if(MSVC)
     )
 else()
     target_compile_options(protocol_parser_core PRIVATE
-        $<$<CONFIG:Release>:-O3>
+        $<$<CONFIG:Release>:-O3 -mavx2 -mpclmul -msse4.2>
         $<$<CONFIG:Release>:-flto>
         $<$<CONFIG:Release>:-ffast-math>
         $<$<CONFIG:Release>:-funroll-loops>

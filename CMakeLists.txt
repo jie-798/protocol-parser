@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(MINGW OR MSYS)
     message(STATUS "使用MinGW/MSYS2编译器")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -mavx2 -mpclmul -msse4.2")
     set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
     
     # MSYS2特定设置
@@ -22,10 +22,11 @@ if(MINGW OR MSYS)
 elseif(MSVC)
     message(STATUS "使用MSVC编译器")
     add_compile_options(/W4 /permissive- /Zc:__cplusplus /utf-8 /wd4324)
+    add_compile_options($<$<CONFIG:Release>:/arch:AVX2>)
 else()
     message(STATUS "使用GCC/Clang编译器")
     add_compile_options(-Wall -Wextra -Wpedantic)
-    add_compile_options($<$<CONFIG:Release>:-O3>)
+    add_compile_options($<$<CONFIG:Release>:-O3 -mavx2 -mpclmul -msse4.2>)
 endif()
 
 # 包含目录

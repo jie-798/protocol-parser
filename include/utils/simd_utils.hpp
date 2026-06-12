@@ -271,17 +271,21 @@ inline void SIMDUtils::memcpy_avx2(uint8_t* dst,
 
 #if PROTOCOL_PARSER_UTILS_AVX2
 inline void SIMDUtils::swap_bytes_16x8(__m128i* data) {
-    // 使用 SSSE3 的 pshufb 指令
+    // 使用 SSSE3 的 pshufb 指令交换 128-bit 内每对相邻字节（16-bit 字节序交换）
+    // _mm_set_epi8(e15..e0): 结果字节 i ← 输入[e_i]
+    // 目标：交换每 16-bit 字的高低位字节 (15↔14, 13↔12, ... , 1↔0)
     __m128i shuffle_mask = _mm_set_epi8(
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+        14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1
     );
     *data = _mm_shuffle_epi8(*data, shuffle_mask);
 }
 
 inline void SIMDUtils::swap_bytes_32x8(__m256i* data) {
+    // 使用 AVX2 的 vpshufb 指令交换 256-bit 内每个 32-bit 字的字节序
+    // 目标：每 32-bit 字 (b3,b2,b1,b0) → (b0,b1,b2,b3)
     __m256i shuffle_mask = _mm256_set_epi8(
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+        12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3,
+        12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3
     );
     *data = _mm256_shuffle_epi8(*data, shuffle_mask);
 }

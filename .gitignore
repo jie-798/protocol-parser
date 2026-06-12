@@ -96,3 +96,13 @@ site/
 test_output/
 tmp/
 temp/
+
+# Reasonix 工具配置
+.reasonix/
+reasonix.toml
+
+# CodeGraph 索引缓存
+.codegraph/
+
+# Claude 本地设置
+.claude/settings.local.json

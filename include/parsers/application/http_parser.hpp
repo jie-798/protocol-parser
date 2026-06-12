@@ -1,14 +1,14 @@
 #pragma once
 
 #include "../base_parser.hpp"
+#include "core/buffer_view.hpp" // BufferView for zero-copy body
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
 
 namespace protocol_parser::parsers {
-
-
 
 // HTTP Method enumeration
 enum class HTTPMethod {
@@ -39,13 +39,24 @@ enum class HTTPMessageType {
     UNKNOWN
 };
 
+// 大小写不敏感的哈希器（避免 to_lower 拷贝）
+struct CaseInsensitiveHash {
+    size_t operator()(const std::string& key) const noexcept;
+};
+
+struct CaseInsensitiveEqual {
+    bool operator()(const std::string& lhs, const std::string& rhs) const noexcept;
+};
+
+using HeaderMap = std::unordered_map<std::string, std::string, CaseInsensitiveHash, CaseInsensitiveEqual>;
+
 // HTTP Request structure
 struct HTTPRequest {
     HTTPMethod method;
     std::string uri;
     HTTPVersion version;
-    std::unordered_map<std::string, std::string> headers;
-    std::string body;
+    HeaderMap headers;
+    core::BufferView body;   // 零拷贝：指向原始缓冲区
 };
 
 // HTTP Response structure
@@ -53,8 +64,8 @@ struct HTTPResponse {
     HTTPVersion version;
     uint16_t status_code;
     std::string reason_phrase;
-    std::unordered_map<std::string, std::string> headers;
-    std::string body;
+    HeaderMap headers;
+    core::BufferView body;   // 零拷贝：指向原始缓冲区
 };
 
 // HTTP Message structure
@@ -62,7 +73,7 @@ struct HTTPMessage {
     HTTPMessageType type = HTTPMessageType::UNKNOWN;
     HTTPRequest request;
     HTTPResponse response;
-    
+
     HTTPMessage() = default;
     ~HTTPMessage() = default;
     HTTPMessage(const HTTPMessage&) = default;
@@ -100,17 +111,17 @@ public:
     // Common methods
     [[nodiscard]] HTTPVersion get_version() const;
     [[nodiscard]] std::string get_header(const std::string& name) const;
-    [[nodiscard]] const std::unordered_map<std::string, std::string>& get_headers() const;
-    [[nodiscard]] std::string get_body() const;
+    [[nodiscard]] const HeaderMap& get_headers() const;
+    [[nodiscard]] core::BufferView get_body() const noexcept;
     [[nodiscard]] size_t get_content_length() const;
     [[nodiscard]] bool is_chunked_encoding() const;
     [[nodiscard]] bool is_keep_alive() const;
 
     // Utility methods
-    [[nodiscard]] std::string method_to_string(HTTPMethod method) const;
-    [[nodiscard]] HTTPMethod string_to_method(const std::string& method_str) const;
-    [[nodiscard]] std::string version_to_string(HTTPVersion version) const;
-    [[nodiscard]] HTTPVersion string_to_version(const std::string& version_str) const;
+    [[nodiscard]] static std::string method_to_string(HTTPMethod method);
+    [[nodiscard]] static HTTPMethod string_to_method(const std::string& method_str);
+    [[nodiscard]] static std::string version_to_string(HTTPVersion version);
+    [[nodiscard]] static HTTPVersion string_to_version(const std::string& version_str);
 
 private:
     HTTPMessage http_message_;
@@ -119,18 +130,16 @@ private:
     bool is_chunked_ = false;
     std::string error_message_;
 
-    // Private parsing methods
-    [[nodiscard]] ParseResult parse_request_line(const std::string& line);
-    [[nodiscard]] ParseResult parse_status_line(const std::string& line);
-    [[nodiscard]] ParseResult parse_headers(const std::vector<std::string>& header_lines);
-    [[nodiscard]] ParseResult parse_body(const BufferView& buffer, size_t headers_end_pos);
+    // 对传入缓冲区零拷贝解析
+    [[nodiscard]] ParseResult parse_request_line(std::string_view line);
+    [[nodiscard]] ParseResult parse_status_line(std::string_view line);
+    [[nodiscard]] ParseResult parse_headers(const BufferView& buffer, size_t headers_end);
+    [[nodiscard]] ParseResult parse_body(const BufferView& buffer, size_t body_start);
     [[nodiscard]] ParseResult parse_chunked_body(const BufferView& buffer, size_t start_pos);
 
-    [[nodiscard]] std::vector<std::string> split_lines(const std::string& data) const;
-    [[nodiscard]] size_t find_headers_end(const BufferView& buffer) const;
-    [[nodiscard]] std::string trim(const std::string& str) const;
-    [[nodiscard]] std::string to_lower(const std::string& str) const;
-    [[nodiscard]] bool validate_http_message(const BufferView& buffer) const;
+    [[nodiscard]] size_t find_headers_end(const BufferView& buffer) const noexcept;
+    [[nodiscard]] static std::string_view trim_sv(std::string_view str) noexcept;
+    [[nodiscard]] bool validate_http_message(const BufferView& buffer) const noexcept;
 };
 
 } // namespace protocol_parser::parsers

@@ -62,22 +62,21 @@ double TCPParser::get_progress() const noexcept {
 }
 
 ParseResult TCPParser::parse_header(ParseContext& context) noexcept {
-    if (context.buffer.size() < TCPHeader::MIN_SIZE) {
+    auto& buf = context.buffer;
+    if (buf.size() < TCPHeader::MIN_SIZE) {
         return ParseResult::NeedMoreData;
     }
     
-    const uint8_t* data = context.buffer.data();
-    
-    // 解析TCP头部字段
-    result_.header.src_port = (data[0] << 8) | data[1];
-    result_.header.dst_port = (data[2] << 8) | data[3];
-    result_.header.seq_num = (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | data[7];
-    result_.header.ack_num = (data[8] << 24) | (data[9] << 16) | (data[10] << 8) | data[11];
-    result_.header.data_offset_flags = data[12];
-    result_.header.flags = data[13];
-    result_.header.window_size = (data[14] << 8) | data[15];
-    result_.header.checksum = (data[16] << 8) | data[17];
-    result_.header.urgent_ptr = (data[18] << 8) | data[19];
+    // 使用 BufferView 的类型安全方法读取（零拷贝 + 正确字节序）
+    result_.header.src_port = buf.read_be16(0);
+    result_.header.dst_port = buf.read_be16(2);
+    result_.header.seq_num = buf.read_be32(4);
+    result_.header.ack_num = buf.read_be32(8);
+    result_.header.data_offset_flags = buf[12];
+    result_.header.flags = buf[13];
+    result_.header.window_size = buf.read_be16(14);
+    result_.header.checksum = buf.read_be16(16);
+    result_.header.urgent_ptr = buf.read_be16(18);
     
     // 验证数据偏移
     uint8_t data_offset = result_.header.get_data_offset();
@@ -158,10 +157,8 @@ ParseResult TCPParser::parse_payload(ParseContext& context) noexcept {
     size_t header_length = result_.header.get_data_offset() * 4;
     
     if (context.buffer.size() > header_length) {
-        result_.payload = core::BufferView(
-            context.buffer.data() + header_length,
-            context.buffer.size() - header_length
-        );
+        // 使用 substr() 保持引用计数正确
+        result_.payload = context.buffer.substr(header_length);
         result_.payload_length = result_.payload.size();
     } else {
         result_.payload = core::BufferView(nullptr, 0);
